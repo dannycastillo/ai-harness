@@ -98,7 +98,6 @@ else
 fi
 
 _row worktrees "$(git worktree list | wc -l | tr -d ' ') (including the main one)"
-_row push "${AI_HARNESS_PUSH:-no}"
 
 # The block is refreshed by install and reported here; never rewritten here.
 _blk=$(sed -n '/^<!-- ai-harness:begin /,/^<!-- ai-harness:end -->$/p' "$AI_HARNESS_REPO/AGENTS.md" 2>/dev/null)

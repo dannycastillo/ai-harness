@@ -60,13 +60,17 @@ ai_harness_check_paths() {
 		: | *:"$_ck_todo" | A:todo/*.md) continue ;;
 		[!ADM]:*) _ck_code=unknown _ck_why=" is status $_ck_s, which check has no rule for" ;;
 		D:todo/*.md) _ck_code=todo-deleted ;;
-		*:AGENTS.md | *:.ai-harness.conf | *:ai-harness/*) _ck_code=protected-path ;;
+		# Fixed, not configurable: a config that could unprotect itself would
+		# let one merge loosen every check after it (ADR-09).
+		*:.ai-harness.conf) _ck_code=protected-path ;;
 		esac
+		# Before Touches: declaring a protected path reserves it, never unlocks it.
+		if [ -z "$_ck_code" ] && ai_harness_check_declared "$_ck_p" "${AI_HARNESS_PROTECTED-AGENTS.md ai-harness/*}" M; then
+			_ck_code=protected-path
+		fi
 		if [ -z "$_ck_code" ] && ! ai_harness_check_declared "$_ck_p" "$3" "$_ck_s"; then
 			_ck_code=undeclared-path
-			if ai_harness_check_declared "$_ck_p" "${AI_HARNESS_PROTECTED:-}" M; then
-				_ck_code=protected-path
-			elif _ck_who=$(ai_harness_check_holder "$1" "$_ck_p" "$_ck_s"); then
+			if _ck_who=$(ai_harness_check_holder "$1" "$_ck_p" "$_ck_s"); then
 				_ck_code=undeclared-path-collision _ck_why=", inside $_ck_who's Touches"
 			fi
 		fi
