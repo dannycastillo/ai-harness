@@ -142,7 +142,8 @@ That is the whole reason for the date: sequential numbers were tried and two
 branches can each add the next one with no conflict at all.
 
 Refer to an ADR by its file name without the directory and extension. The
-first ten are numbered `ADR-01` to `ADR-10` and keep those names.
+first ten are numbered `ADR-01` to `ADR-10` and keep those names. ADR-01 to
+ADR-06 are about wut and stay in `dannycastillo/wut-command`.
 
 ```markdown
 # ADR YYYY-MM-DD: Title
@@ -204,7 +205,7 @@ message or an ADR, where it cannot drift out of sync with the code it describes,
 and where this repo already expects it in full.
 
 - Default to none. The code says what it does; a comment says why it looks wrong.
-- Keep Go's doc comments — exported identifiers and package docs, stated plainly.
+- Keep a short header on each script — what it is, in a line or two.
 - A comment longer than the code it describes is arguing a design. Move it.
 - Never restate the line below, number steps, or leave commented-out code.
 
@@ -251,7 +252,7 @@ Everything needed to start without asking a question.
 ## Done when
 - [ ] verifiable statement
 - [ ] verifiable statement
-- [ ] `go build ./...` and `go vet ./...` pass
+- [ ] `aih gate` passes
 ```
 
 ### Priority
@@ -285,11 +286,11 @@ Paths or globs, space- or comma-separated, repo-relative. No prose and no
 backticks: a field a script cannot parse reserves nothing.
 
 ```
-- **Touches:** internal/search/scan.go, internal/search/scan_test.go
-- **Touches:** internal/*
+- **Touches:** ai-harness/lib/run.sh, ai-harness/verbs/run.sh
+- **Touches:** ai-harness/lib/*
 ```
 
-A `*` matches across `/`, so `internal/*` covers `internal/ui/list_picker.go`.
+A `*` matches across `/`, so `ai-harness/*` covers `ai-harness/lib/run.sh`.
 That is the shell's `case` behaviour rather than a choice, and it errs the
 useful way: too broad only costs serialization, too narrow puts two agents in
 one file.
