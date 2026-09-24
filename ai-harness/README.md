@@ -171,6 +171,7 @@ harness knows nothing about the project's own conventions.
 
 Everything project-specific lives in `.ai-harness.conf` at the repo root, sourced
 as POSIX sh. Nothing under `ai-harness/` knows the project's language.
+A Go project's config, for example:
 
 ```sh
 AI_HARNESS_PROJECT="wut"
