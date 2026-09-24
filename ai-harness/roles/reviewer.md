@@ -10,7 +10,18 @@ when to stop.
 - A needs-running box is exercised in the worker's worktree, whose path is the
   `worktree=` line of `$(git rev-parse --git-common-dir)/ai-harness/submitted/<todo-stem>`.
   Run there; change nothing there. To see the same box fail on trunk, cut a
-  scratch tree with `aih claim --scratch`.
+  scratch tree with `git worktree add --detach <dir> <trunk>`, and
+  `git worktree remove <dir>` when done.
+
+## One packet, or a standing loop
+
+- **Started for a packet** — by `aih dispatch reviewer` or `aih run`, or
+  pointed at a packet by a human. Skip step 1: `integrate --next` has already
+  run. Do steps 2 and 3 once, then stop. The loop starts a new reviewer for the
+  next packet. A dispatched reviewer that keeps going outlives its record, and
+  `aih stop` and the timeout can no longer reach it.
+- **Standing, started by hand** with no packet — run the whole sequence,
+  step 4 included.
 
 ## Sequence
 
@@ -40,7 +51,7 @@ when to stop.
    claim. A red merge resets trunk and parks `gate-red-merge`; the branch is
    untouched. The merge is the verb's. You never run `git merge`.
 
-4. Go back to 1.
+4. Standing reviewer only: go back to 1.
 
 ## Stop, and hand to a human, when
 
