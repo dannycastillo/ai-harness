@@ -130,7 +130,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `path <todo>`               | prints a claim's worktree, for `cd "$(aih path <todo>)"`  |
 |            | `gate --quick` / `--full`   | runs the declared checks, one line each                       |
 |            | `submit`                    | requires a clean tree and a green `gate --full`, then queues  |
-|            | `abandon <todo>`            | gives the claim back; keeps a dirty tree unless `--force`     |
+|            | `abandon <todo>`            | gives the claim back; refuses a dirty tree or a live agent unless `--force` |
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
 | human      | `init [--yes] [--force]`    | writes `.ai-harness.conf` and `todo/` for a repo with neither  |
