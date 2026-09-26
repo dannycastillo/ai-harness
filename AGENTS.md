@@ -3,10 +3,62 @@
 Working agreements for this repo. Minimal on purpose — sections get added when
 we hit something actually worth writing down, not in anticipation.
 
-The portable rules — branches, commits, todos — are `aih role protocol`. This
-file holds only what's specific to this repo.
+The rules the harness enforces — todos, `Touches`, working in parallel — are
+`aih role protocol`. This file holds what is this repo's, including how it
+names branches and writes commits.
 
 ## Git workflow
+
+### Branch for everything
+
+`main` is only ever written by a merge. Never commit to it directly, not even a
+one-line fix or a typo. If you find yourself on `main` with uncommitted work,
+create the branch first, then commit — the work moves with you.
+
+### Four prefixes, nothing else
+
+| Prefix  | Use for                                                  |
+| ------- | -------------------------------------------------------- |
+| `feat`  | new behavior someone using the tool can observe          |
+| `fix`   | correcting behavior that was wrong                       |
+| `doc`   | documentation only, including this file                  |
+| `chore` | deps, build, tooling, restructuring — no behavior change |
+
+`chore` covers moving code as well as maintaining it: an extraction that leaves
+behavior identical is a chore however large its diff, because what a reader
+needs to check is that nothing changed.
+
+If a change doesn't fit one of these, it's doing two things — split it until
+each piece fits.
+
+### One branch unless the split earns it
+
+A minor change in scope — a decision lands mid-branch, an answer widens the work
+a little — stays on the branch you're on. Two branches cost two reviews and two
+merges, and stacking one on the other pays that to preserve an intermediate
+state nobody will check out.
+
+Nothing is pushed until the merge, so the history isn't fixed yet:
+
+```sh
+git reset --soft main   # branch pointer back to main, every change still staged
+```
+
+Recommit from there in whatever shape reads best, and rename the branch when its
+old name stops describing the work.
+
+Split only when the halves could genuinely ship apart — when someone would want
+to merge, revert, or bisect them separately.
+
+### Naming
+
+- **Branch:** `<prefix>/<short-kebab-description>` — `feat/pane-resize`
+- **Commit subject:** `<prefix>: <imperative summary>` — `fix: stop the exit erase eating a line`
+
+Imperative mood ("stop", "add", "align") because a commit describes what
+applying it *does* to the tree, not what you did yesterday. The branch prefix
+and its commits' prefixes normally match; when they don't, the branch takes the
+prefix of its most significant change.
 
 ### Before every commit
 
