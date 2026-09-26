@@ -25,14 +25,23 @@ Partly built. `aih help` lists what your copy has.
 - `AGENTS.md` names the two roles and no language. Trunk is written only by
   `integrate`, as a rule rather than a mechanism: a merge made by hand shows
   in `aih log` as `by hand`, since it carries no trailers.
-- Not yet lifted into another repo: `install.sh` is an open todo. The
-  adapters are in `adapters/`.
+- Not yet lifted into another repo. The adapters are in `adapters/`.
 
 ## Setup
 
 The tree is relocatable and installs once per machine; a repo holds only
-`.ai-harness.conf` and `todo/`. Until there's a package to install, point a
-launcher at this tree directly:
+`.ai-harness.conf` and `todo/`. Two ways to install it:
+
+```sh
+brew install dannycastillo/tap/ai-harness
+```
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dannycastillo/ai-harness/main/install.sh | sh
+```
+
+For a checkout you're developing against, point a launcher at this tree
+directly instead:
 
 ```sh
 cat >~/.local/bin/aih <<'EOF'
