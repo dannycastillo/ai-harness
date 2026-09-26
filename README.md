@@ -16,6 +16,47 @@ This repo was split out of
 [`dannycastillo/wut-command`](https://github.com/dannycastillo/wut-command),
 another project of the author's, where the harness was originally built.
 
+## Quickstart
+
+Install, once per machine:
+
+```sh
+brew install dannycastillo/tap/ai-harness
+```
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dannycastillo/ai-harness/main/install.sh | sh
+```
+
+In the repo you want it to work:
+
+```sh
+aih init
+```
+
+It detects the stack, prints the `.ai-harness.conf` it would write, and stops
+for a `y`. Open the file it wrote and uncomment `AI_HARNESS_AGENT_CMD`,
+pointing it at your agent CLI's non-interactive flags — that's the one line
+`init` leaves for you to fill in.
+
+Write one file under `todo/`, in the shape `todo/README.md` shows, then:
+
+```sh
+aih run --all
+```
+
+What you'll see: a worktree per todo, and, for each one that passes review, a
+merge on trunk carrying `AI-Harness-*` trailers for the todo, the worker, and
+the gate. Anything a human needs to look at — a protected path, a red gate, a
+stale check — parks instead of merging; `aih status` shows what's still
+running, `aih log` shows what already happened.
+
+Agents run unattended and answer no prompts, inside the worktree `aih claim`
+cut for them — that worktree is the sandbox, not your working copy. Point
+`AI_HARNESS_AGENT_CMD` only at an agent you trust with that, because
+`.ai-harness.conf` is sourced as shell, by every verb, so whatever it names
+runs with your own permissions.
+
 ## Status
 
 Partly built. `aih help` lists what your copy has.
