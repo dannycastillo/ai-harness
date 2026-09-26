@@ -26,10 +26,15 @@ symlink, so a package-manager install finds nothing.
   with this tree's path filled in.
 - `selftest.sh:18` looks for the tree inside the worktree; it now uses the
   running copy.
+- Scoping is already per repo: config from `git rev-parse --show-toplevel`,
+  state and locks under `git rev-parse --git-common-dir`, scratch files in
+  that state dir. The tree is read-only at runtime. Nothing here may add a
+  write to `$AI_HARNESS_HOME`, `$HOME`, or a fixed `/tmp` path.
 
 ## Done when
 - [ ] `ln -s <tree>/bin/aih /tmp/x/aih && /tmp/x/aih version` works from a repo with a config
 - [ ] from a copy of the tree in a scratch directory outside any repo, `aih doctor` run inside this repo passes
 - [ ] a dispatched agent's PATH begins with the running copy's `bin` (check the `cmd=`/`cwd=` record or a stub agent that prints `$PATH`)
+- [ ] two scratch repos with configs, one installed tree, `aih run --once` started in both at the same moment: each repo's state dir holds only its own claims and events, and neither loop refuses on the other's lock
 - [ ] with `AI_HARNESS_PROTECTED` unset, `aih check --selftest` treats `AGENTS.md` as protected and `ai-harness/*` as not
 - [ ] `aih gate` passes
