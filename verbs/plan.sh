@@ -32,6 +32,7 @@ _section claimed 'claimed'
 _all=
 for _f in todo/*.md; do
 	[ -f "$_f" ] || continue
+	[ "$(basename -- "$_f")" != README.md ] || continue
 	_s=$(basename -- "$_f" .md)
 	if [ -n "$_stems" ] && [ ! -f "$(ai_harness_claim_file "$_s")" ]; then
 		case " $_stems " in *" $_s "*) ;; *) continue ;; esac

@@ -59,6 +59,9 @@ whether it's a plain exec, a symlink, or a package manager's stub.
 checkout's copy over the installed one. Agents the loop starts do not need
 it: `run` puts the running copy's own `bin` first on their PATH.
 
+- A repo the harness has never seen: `aih init` detects the stack, writes
+  `.ai-harness.conf`, and creates `todo/`. It always prints the config first
+  and stops for a `y` unless given `--yes`.
 - `doctor` checks the state dir, trunk, the worktree root, and every declared
   gate's tools. It changes nothing unless given `--repair`, which rebuilds
   claims from git.
@@ -89,7 +92,8 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `abandon <todo>`            | gives the claim back; keeps a dirty tree unless `--force`     |
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
-| human      | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
+| human      | `init [--yes] [--force]`    | writes `.ai-harness.conf` and `todo/` for a repo with neither  |
+|            | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
 |            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent     |

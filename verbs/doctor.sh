@@ -97,7 +97,9 @@ fi
 
 # One preflight, shared with the gate verb: doctor is advisory, so the same
 # assertion has to sit in front of the thing that actually runs the gates.
-if _pf=$(ai_harness_gate_preflight 2>&1); then
+if [ -z "$AI_HARNESS_GATES" ]; then
+	_row gates "no gates declared"
+elif _pf=$(ai_harness_gate_preflight 2>&1); then
 	_row gates "$AI_HARNESS_GATES (all runnable)"
 else
 	_row gates "$AI_HARNESS_GATES"
