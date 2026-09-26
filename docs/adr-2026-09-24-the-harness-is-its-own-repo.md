@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-24
+- **Superseded by:** adr-2026-09-26-one-install-per-machine, the layout rule only
 
 ## Context
 - The harness was built inside `dannycastillo/wut-command`, first as

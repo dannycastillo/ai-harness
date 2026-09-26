@@ -1,0 +1,65 @@
+#!/bin/sh
+# aih — one todo, one branch, one worktree; trunk merged by one verb.
+#
+# Resolves a verb to verbs/<verb>.sh and sources it. There is no verb
+# registry on purpose: adding a verb adds a file and edits nothing, so two
+# branches adding verbs never conflict.
+
+set -eu
+
+_src=$0
+while [ -L "$_src" ]; do
+	_dir=$(CDPATH='' cd -- "$(dirname -- "$_src")" && pwd -P)
+	_src=$(readlink -- "$_src")
+	case $_src in
+	/*) ;;
+	*) _src="$_dir/$_src" ;;
+	esac
+done
+AI_HARNESS_HOME=$(CDPATH='' cd -- "$(dirname -- "$_src")/.." && pwd -P)
+readonly AI_HARNESS_HOME
+unset _src _dir
+
+# shellcheck source=/dev/null  # a glob cannot be followed statically
+for _lib in "$AI_HARNESS_HOME"/lib/*.sh; do . "$_lib"; done
+unset _lib
+
+AI_HARNESS_REPO=$(git rev-parse --show-toplevel 2>/dev/null) ||
+	die "$EX_FAIL" "not inside a git repository"
+readonly AI_HARNESS_REPO
+
+[ -f "$AI_HARNESS_REPO/.ai-harness.conf" ] ||
+	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
+# shellcheck source=/dev/null  # per-project, by design
+. "$AI_HARNESS_REPO/.ai-harness.conf"
+
+: "${AI_HARNESS_PROJECT:?.ai-harness.conf must set AI_HARNESS_PROJECT}"
+: "${AI_HARNESS_TRUNK:?.ai-harness.conf must set AI_HARNESS_TRUNK}"
+: "${AI_HARNESS_WORKTREE_ROOT:?.ai-harness.conf must set AI_HARNESS_WORKTREE_ROOT}"
+
+# Verbs read todo/*.md and the gate's paths relative to the repo root, so a
+# verb run from a subdirectory must still see the whole tree. A path a user
+# passes in — submit --body, for instance — is theirs and stays relative to
+# where they actually ran aih.
+AI_HARNESS_INVOKED_FROM=$(pwd -P)
+readonly AI_HARNESS_INVOKED_FROM
+export AI_HARNESS_INVOKED_FROM
+cd -- "$AI_HARNESS_REPO"
+
+verb=help
+if [ $# -gt 0 ]; then
+	verb=$1
+	shift
+fi
+case $verb in
+-h | --help) verb=help ;;
+esac
+
+verb_file="$AI_HARNESS_HOME/verbs/$verb.sh"
+[ -f "$verb_file" ] || die "$EX_USAGE" "unknown verb: $verb (try: aih help)"
+
+AI_HARNESS_VERB=$verb
+export AI_HARNESS_VERB
+
+# shellcheck source=/dev/null  # the verb is resolved at runtime
+. "$verb_file"
