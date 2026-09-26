@@ -15,5 +15,6 @@ cat <<'TXT'
 Each worktree runs its own copy, so aih on PATH is a launcher, never a fixed
 path or a symlink. aih doctor prints it when it is missing.
 
-exit codes: 0 ok, 1 failed, 2 usage, 3 paused, 10 judgment needed
+exit codes: 0 ok, 1 failed, 2 usage, 3 paused, 4 the environment cannot run
+the gate, 10 judgment needed
 TXT

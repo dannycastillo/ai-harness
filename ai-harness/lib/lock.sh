@@ -71,7 +71,7 @@ ai_harness_lock_wait() {
 		if [ "$_waited" -ge "$_limit" ]; then
 			# The caller reports the holder; staleness is the part it cannot know.
 			ai_harness_lock_is_stale "$_name" &&
-				warn "lock '$_name' looks stale — inspect it, then: aih unlock $_name"
+				warn "lock '$_name' looks stale — inspect it, then: aih unlock $_name --force"
 			return 1
 		fi
 		sleep 1
