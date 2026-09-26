@@ -41,7 +41,10 @@ ai_harness_claim_count() {
 # between `worktree add` succeeding and the claim file being written.
 ai_harness_state_repair() {
 	_cd=$(ai_harness_claims_dir)
-	_root=$(ai_harness_worktree_root)
+	_root=$(ai_harness_worktree_root) || {
+		warn "state: worktree root's parent does not exist: $_root"
+		return 1
+	}
 	_main=$(ai_harness_main_worktree)
 	mkdir -p "$_cd"
 

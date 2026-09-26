@@ -55,8 +55,33 @@ ai_harness_worktree_root() {
 	/*) _r=$AI_HARNESS_WORKTREE_ROOT ;;
 	*) _r="$(ai_harness_main_worktree)/$AI_HARNESS_WORKTREE_ROOT" ;;
 	esac
-	# It need not exist yet, so normalize the parent and keep the leaf.
-	printf '%s/%s\n' "$(CDPATH='' cd -- "$(dirname -- "$_r")" && pwd -P)" "$(basename -- "$_r")"
+	# It need not exist yet, so normalize the parent and keep the leaf. The
+	# parent itself must already exist: cd-ing into a missing one used to
+	# collapse silently, turning the root into "/<leaf>".
+	_parent=$(dirname -- "$_r")
+	if _resolved=$(CDPATH='' cd -- "$_parent" 2>/dev/null && pwd -P); then
+		printf '%s/%s\n' "$_resolved" "$(basename -- "$_r")"
+		return 0
+	fi
+	ai_harness_nearest_existing "$_parent"
+	return 1
+}
+
+# The nearest ancestor of a path that exists, resolved, with the missing rest
+# reattached unresolved. Callers use it to name what is missing rather than
+# printing the un-collapsed, harder-to-read path they started with.
+ai_harness_nearest_existing() {
+	_p=$1
+	_suffix=
+	while [ "$_p" != / ] && [ "$_p" != . ]; do
+		if _abs=$(CDPATH='' cd -- "$_p" 2>/dev/null && pwd -P); then
+			printf '%s%s\n' "$_abs" "${_suffix:+/$_suffix}"
+			return 0
+		fi
+		_suffix=$(basename -- "$_p")${_suffix:+/$_suffix}
+		_p=$(dirname -- "$_p")
+	done
+	printf '%s\n' "$1"
 }
 
 # Where trunk is checked out, discovered rather than assumed. Empty when trunk

@@ -81,7 +81,9 @@ _n=$(ai_harness_claim_count)
 [ "$_n" -lt "$AI_HARNESS_MAX_WORKERS" ] ||
 	_bail "$EX_FAIL" "claim: $_n claims already active, AI_HARNESS_MAX_WORKERS is $AI_HARNESS_MAX_WORKERS"
 
-_wt="$(ai_harness_worktree_root)/$_stem"
+_wtr=$(ai_harness_worktree_root) ||
+	_bail "$EX_FAIL" "claim: worktree root's parent does not exist: $_wtr"
+_wt="$_wtr/$_stem"
 
 if [ "$_dry" = yes ]; then
 	printf 'claim: would claim %s\n  branch    %s\n  worktree  %s\n  touches   %s\n' "$_stem" "$_branch" "$_wt" "$_touches" >&2
