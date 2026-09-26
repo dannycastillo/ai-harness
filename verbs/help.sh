@@ -12,8 +12,9 @@ done
 
 cat <<'TXT'
 
-Each worktree runs its own copy, so aih on PATH is a launcher, never a fixed
-path or a symlink. aih doctor prints it when it is missing.
+The tree is relocatable and installs once per machine. aih on PATH may be a
+fixed path, a symlink, or a launcher; aih doctor prints one when none is on
+PATH.
 
 exit codes: 0 ok, 1 failed, 2 usage, 3 paused, 4 the environment cannot run
 the gate, 10 judgment needed

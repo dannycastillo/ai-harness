@@ -29,27 +29,29 @@ Partly built. `aih help` lists what your copy has.
 
 ## Setup
 
-Each worktree runs its own copy, so `aih` on PATH is a launcher that execs
-the current repo's copy, never a fixed path or a symlink:
+The tree is relocatable and installs once per machine; a repo holds only
+`.ai-harness.conf` and `todo/`. Until there's a package to install, point a
+launcher at this tree directly:
 
 ```sh
 cat >~/.local/bin/aih <<'EOF'
 #!/bin/sh
-exec "$(git rev-parse --show-toplevel)/bin/aih" "$@"
+exec "${AI_HARNESS_HOME:-<path to this tree>}/bin/aih" "$@"
 EOF
 chmod +x ~/.local/bin/aih
 aih doctor --selftest
 ```
 
-The launcher never changes, so it is installed once per machine; the tree
-upgrades per repo through git. Agents the loop starts do not need it: `run`
-puts the worktree's own `bin` on their PATH.
+`aih doctor` prints that block with this tree's path filled in.
+`bin/aih` resolves symlinks before locating its tree, so the launcher works
+whether it's a plain exec, a symlink, or a package manager's stub.
+`AI_HARNESS_HOME` overrides which tree runs — how a developer picks a
+checkout's copy over the installed one. Agents the loop starts do not need
+it: `run` puts the running copy's own `bin` first on their PATH.
 
 - `doctor` checks the state dir, trunk, the worktree root, every declared
   gate's tools, and the `AGENTS.md` block's checksum. It changes nothing
   unless given `--repair`, which rebuilds claims from git.
-- A harness invoked from another worktree's tree refuses to run. It would read
-  the wrong `.ai-harness.conf`.
 
 ## The two roles
 

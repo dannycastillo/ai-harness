@@ -15,18 +15,13 @@ ai_harness_selftest() {
 	_rc=0
 
 	if git worktree add --detach "$_wt" HEAD >/dev/null 2>&1; then
-		if [ -x "$_wt/bin/aih" ]; then
-			_here=$(ai_harness_state_dir)
-			_there=$(cd "$_wt" && ./bin/aih doctor --print-state-dir) ||
-				_there="(the linked worktree's harness failed)"
-			if [ "$_here" = "$_there" ]; then
-				printf '    %-11s %s\n' 'state dir' 'identical from a linked worktree'
-			else
-				printf '    %-11s %s\n' 'state dir' "root: $_here / linked: $_there"
-				_rc=1
-			fi
+		_here=$(ai_harness_state_dir)
+		_there=$(cd "$_wt" && "$AI_HARNESS_HOME/bin/aih" doctor --print-state-dir) ||
+			_there="(the linked worktree's harness failed)"
+		if [ "$_here" = "$_there" ]; then
+			printf '    %-11s %s\n' 'state dir' 'identical from a linked worktree'
 		else
-			printf '    %-11s %s\n' worktree 'the tree is not committed on HEAD yet'
+			printf '    %-11s %s\n' 'state dir' "root: $_here / linked: $_there"
 			_rc=1
 		fi
 		git worktree remove --force "$_wt" >/dev/null 2>&1 || {
