@@ -13,5 +13,7 @@ project-specific lives in `.ai-harness.conf`.
 
 This repo was split out of
 [`dannycastillo/wut-command`](https://github.com/dannycastillo/wut-command),
-where the harness was built. Its history is kept; references like
-`dannycastillo/wut-command#21` point at pull requests there.
+another project of the author's, where the harness was originally built.
+
+There is no packaged install yet. A Homebrew tap and an `install.sh` are
+coming; until then, clone this repo to use `aih`.
