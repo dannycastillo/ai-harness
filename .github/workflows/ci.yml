@@ -31,4 +31,4 @@ jobs:
       - name: aih gate
         run: |
           shellcheck --version
-          ai-harness/bin/aih gate
+          bin/aih gate

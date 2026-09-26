@@ -65,7 +65,7 @@ ai_harness_check_paths() {
 		*:.ai-harness.conf) _ck_code=protected-path ;;
 		esac
 		# Before Touches: declaring a protected path reserves it, never unlocks it.
-		if [ -z "$_ck_code" ] && ai_harness_check_declared "$_ck_p" "${AI_HARNESS_PROTECTED-AGENTS.md ai-harness/*}" M; then
+		if [ -z "$_ck_code" ] && ai_harness_check_declared "$_ck_p" "${AI_HARNESS_PROTECTED-AGENTS.md}" M; then
 			_ck_code=protected-path
 		fi
 		if [ -z "$_ck_code" ] && ! ai_harness_check_declared "$_ck_p" "$3" "$_ck_s"; then

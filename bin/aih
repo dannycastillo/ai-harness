@@ -1,7 +1,7 @@
 #!/bin/sh
 # aih — one todo, one branch, one worktree; trunk merged by one verb.
 #
-# Resolves a verb to ai-harness/verbs/<verb>.sh and sources it. There is no verb
+# Resolves a verb to verbs/<verb>.sh and sources it. There is no verb
 # registry on purpose: adding a verb adds a file and edits nothing, so two
 # branches adding verbs never conflict.
 
@@ -21,13 +21,13 @@ readonly AI_HARNESS_REPO
 # Each worktree runs its own copy. Invoking one worktree's aih against
 # another's checkout would read the wrong .ai-harness.conf and act on the wrong
 # tree, so it is refused rather than guessed at.
-if [ "$AI_HARNESS_HOME" != "$AI_HARNESS_REPO/ai-harness" ]; then
-	die "$EX_FAIL" "$0 belongs to $(dirname -- "$AI_HARNESS_HOME"), but the current tree is $AI_HARNESS_REPO
+if [ "$AI_HARNESS_HOME" != "$AI_HARNESS_REPO" ]; then
+	die "$EX_FAIL" "$0 belongs to $AI_HARNESS_HOME, but the current tree is $AI_HARNESS_REPO
   use that tree's own copy, or the launcher aih doctor prints"
 fi
 
 [ -f "$AI_HARNESS_REPO/.ai-harness.conf" ] ||
-	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see ai-harness/README.md's Setup section"
+	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
 # shellcheck source=/dev/null  # per-project, by design
 . "$AI_HARNESS_REPO/.ai-harness.conf"
 

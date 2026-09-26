@@ -124,7 +124,7 @@ else
 	cat <<'TXT'
                   cat >~/.local/bin/aih <<'EOF'
                   #!/bin/sh
-                  exec "$(git rev-parse --show-toplevel)/ai-harness/bin/aih" "$@"
+                  exec "$(git rev-parse --show-toplevel)/bin/aih" "$@"
                   EOF
                   chmod +x ~/.local/bin/aih
 TXT

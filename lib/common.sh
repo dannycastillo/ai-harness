@@ -1,4 +1,4 @@
-# Shared helpers. Sourced by ai-harness/bin/aih before any verb.
+# Shared helpers. Sourced by bin/aih before any verb.
 #
 # POSIX sh only: macOS ships bash 3.2.57, so no arrays and no mapfile.
 

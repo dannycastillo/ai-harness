@@ -90,13 +90,13 @@ trailers.
 
 Never push a branch, merge, or force-push anything without being asked.
 
-<!-- ai-harness:begin cksum=3071968440 -->
+<!-- ai-harness:begin cksum=1797492891 -->
 ## Working in parallel
 
 Several agents work this backlog at once, one todo each, in separate
 worktrees, and trunk is written only by `aih integrate`. The mechanics and
-the verbs are in `ai-harness/README.md`; each role's sequence is in
-`ai-harness/roles/`. `aih run` works a set of todos unattended.
+the verbs are in `README.md`; each role's sequence is in `roles/`. `aih run`
+works a set of todos unattended.
 
 `Touches` in a todo is a reservation on paths, and it is the only thing that
 decides what runs side by side.
@@ -286,11 +286,11 @@ Paths or globs, space- or comma-separated, repo-relative. No prose and no
 backticks: a field a script cannot parse reserves nothing.
 
 ```
-- **Touches:** ai-harness/lib/run.sh, ai-harness/verbs/run.sh
-- **Touches:** ai-harness/lib/*
+- **Touches:** lib/run.sh, verbs/run.sh
+- **Touches:** lib/*
 ```
 
-A `*` matches across `/`, so `ai-harness/*` covers `ai-harness/lib/run.sh`.
+A `*` matches across `/`, so `lib/*` covers `lib/run.sh`.
 That is the shell's `case` behaviour rather than a choice, and it errs the
 useful way: too broad only costs serialization, too narrow puts two agents in
 one file.
