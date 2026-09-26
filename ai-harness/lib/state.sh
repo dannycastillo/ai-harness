@@ -5,7 +5,10 @@
 
 ai_harness_kv_get() {
 	[ -f "$1" ] || return 1
-	sed -n "s/^$2=//p" "$1" | head -1
+	# A concurrent integrate can remove $1 after the check above; 2>/dev/null
+	# turns that race into the same empty read as a file that was never there,
+	# instead of a "No such file" line loose in the caller's log.
+	sed -n "s/^$2=//p" "$1" 2>/dev/null | head -1
 }
 
 ai_harness_claims_dir() { printf '%s/claims\n' "$(ai_harness_state_dir)"; }
@@ -41,7 +44,10 @@ ai_harness_claim_count() {
 # between `worktree add` succeeding and the claim file being written.
 ai_harness_state_repair() {
 	_cd=$(ai_harness_claims_dir)
-	_root=$(ai_harness_worktree_root)
+	_root=$(ai_harness_worktree_root) || {
+		warn "state: worktree root's parent does not exist: $_root"
+		return 1
+	}
 	_main=$(ai_harness_main_worktree)
 	mkdir -p "$_cd"
 

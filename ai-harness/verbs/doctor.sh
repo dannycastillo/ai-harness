@@ -19,7 +19,7 @@ done
 
 if [ "$_repair" = yes ]; then
 	log 'reconciling claims against git worktree list'
-	ai_harness_state_repair
+	ai_harness_state_repair || die "$EX_FAIL" "doctor: repair aborted"
 	log 'repair: done'
 fi
 
@@ -54,17 +54,20 @@ else
 	fi
 fi
 
-_wt_root=$(ai_harness_worktree_root)
-if [ -d "$_wt_root" ]; then
-	if [ -w "$_wt_root" ]; then
-		_row "worktree root" "$_wt_root"
+if _wt_root=$(ai_harness_worktree_root); then
+	if [ -d "$_wt_root" ]; then
+		if [ -w "$_wt_root" ]; then
+			_row "worktree root" "$_wt_root"
+		else
+			_bad "worktree root" "$_wt_root (not writable)"
+		fi
+	elif [ -w "$(dirname -- "$_wt_root")" ]; then
+		_row "worktree root" "$_wt_root (will be created on first claim)"
 	else
-		_bad "worktree root" "$_wt_root (not writable)"
+		_bad "worktree root" "$(dirname -- "$_wt_root") is not writable"
 	fi
-elif [ -w "$(dirname -- "$_wt_root")" ]; then
-	_row "worktree root" "$_wt_root (will be created on first claim)"
 else
-	_bad "worktree root" "$(dirname -- "$_wt_root") is not writable"
+	_bad "worktree root" "$_wt_root is missing"
 fi
 
 # One preflight, shared with the gate verb: doctor is advisory, so the same
