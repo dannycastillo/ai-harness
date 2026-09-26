@@ -25,6 +25,11 @@ everything.
   branch unless the split earns it" are a project's rules and come out;
   this repo keeps them in its own `AGENTS.md`.
 - README's todo example, if any, drops the line.
+- `roles/protocol.md`, Filing one: say that the prefixes are whatever the
+  project declares in `AI_HARNESS_PREFIXES`, that what each one means is
+  the project's `AGENTS.md`, and that after filing you run `aih plan` and
+  fix any `invalid` row. Nowhere may the protocol name this repo's four
+  as if they were the harness's.
 - Strip the `- **Branch:**` line from every file in `todo/`, this one
   included. `Touches` names `todo/*` for that reason, so this runs while
   no other todo is claimed.
@@ -36,5 +41,6 @@ everything.
 - [ ] a todo with no Branch line validates, claims, and submits
 - [ ] a todo that still has one validates and is claimed onto the derived branch, the line ignored
 - [ ] `roles/protocol.md`'s Git workflow section states only the prefix rule and the derivation
+- [ ] `roles/protocol.md` tells a filing agent to take the prefixes from `AI_HARNESS_PREFIXES`, read the project's `AGENTS.md` for their meaning, and check `aih plan` after filing; `grep -c 'feat fix doc chore' roles/protocol.md` prints 0
 - [ ] `aih check --selftest` passes
 - [ ] `aih gate` passes
