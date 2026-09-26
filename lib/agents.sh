@@ -38,7 +38,7 @@ ai_harness_agent_spawn() {
 	mkdir -p "$(dirname -- "$_sp_rec")" "$(dirname -- "$_sp_log")"
 	rm -f "$_sp_rec.exit"
 	# shellcheck disable=SC2086,SC2016  # the command may carry its own arguments; the wrapper's shell expands the quotes
-	_sp_pid=$(set -m; PATH="$PWD/ai-harness/bin:$PATH" nohup sh -c 'l=$1; shift; "$@" >"$l" 2>&1; printf "%s\n" "$?" >"$0.exit"' \
+	_sp_pid=$(set -m; PATH="$PWD/bin:$PATH" nohup sh -c 'l=$1; shift; "$@" >"$l" 2>&1; printf "%s\n" "$?" >"$0.exit"' \
 		"$_sp_rec" "$_sp_log" $AI_HARNESS_AGENT_CMD "$3" </dev/null >/dev/null 2>&1 & printf '%s\n' "$!")
 	{
 		printf 'role=%s\nstem=%s\npid=%s\n' "$1" "$2" "$_sp_pid"

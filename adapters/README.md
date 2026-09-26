@@ -2,7 +2,7 @@
 
 An adapter is how a human starts a role by hand in an editor session: a slash
 command or a rule that says *read the role doc and follow it*. Each one is a
-pointer to `ai-harness/roles/<role>.md` and nothing more.
+pointer to `roles/<role>.md` and nothing more.
 
 The loop never uses one. `dispatch` and `run` start agents through
 `AI_HARNESS_AGENT_CMD` with a one-line boot prompt, and that is the whole
@@ -31,10 +31,10 @@ One directory per platform, laid out as it lands in a repo root:
 Installing is a copy. `install.sh` does it; by hand:
 
 ```sh
-cp -R ai-harness/adapters/claude-code/. .claude/
+cp -R adapters/claude-code/. .claude/
 ```
 
-The copy under `ai-harness/adapters/` is the source and the one under the dot
+The copy under `adapters/` is the source and the one under the dot
 directory is what the platform reads. `diff -r` between the two is the drift
 check.
 
@@ -50,7 +50,7 @@ not a degraded one.
 1. Make `adapters/<platform>/`, mirroring that platform's dot directory.
 2. Add one file per role, in whatever shape the platform reads as a command
    or rule. The body is the pointer: *You are an AI Harness `<role>`. Read
-   `ai-harness/roles/<role>.md` and follow it.*
+   `roles/<role>.md` and follow it.*
 3. Give it whatever frontmatter the platform needs to be started by hand and
    not by the model on its own.
 4. Add the directory to the table above.

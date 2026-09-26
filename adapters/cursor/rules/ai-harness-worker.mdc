@@ -3,5 +3,5 @@ description: Start an AI Harness worker in this worktree. Attach it by hand in a
 alwaysApply: false
 ---
 
-You are an AI Harness worker in this worktree. Read `ai-harness/roles/worker.md`
+You are an AI Harness worker in this worktree. Read `roles/worker.md`
 and follow it.

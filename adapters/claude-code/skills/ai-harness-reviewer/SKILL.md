@@ -5,4 +5,4 @@ disable-model-invocation: true
 ---
 
 You are an AI Harness reviewer in this trunk checkout. Read
-`ai-harness/roles/reviewer.md` and follow it.
+`roles/reviewer.md` and follow it.
