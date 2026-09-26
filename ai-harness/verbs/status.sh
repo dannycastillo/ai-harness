@@ -129,7 +129,9 @@ for _s in $_stems; do
 done
 
 # One awk pass: size TODO/PRI/STATE from the data, then print with WHY
-# truncated to keep every line at or under 100 columns.
+# truncated to keep every line at or under 100 columns. A cut WHY ends in a
+# "[n]" marker; the footnotes print under the table, numbered in table order
+# in the same pass, so a marker and its footnote cannot disagree.
 printf '%s' "$_rows" | sort -k1,1n -k2,2n -k3,3 | cut -f3- | awk -F'\t' -v max=100 '
 {
 	stem[NR] = $1; pri[NR] = $2; state[NR] = $3; why[NR] = $4
@@ -145,12 +147,25 @@ END {
 	whymax = max - w1 - w2 - w3 - 6
 	if (whymax < 4) whymax = 4
 	printf "%-*s  %-*s  %-*s  %s\n", w1, "TODO", w2, "PRI", w3, "STATE", "WHY"
+	fn = 0
 	for (i = 1; i <= n; i++) {
 		w = why[i]
-		# "…" is 3 bytes: reserve all 3 so a byte-counting `wc -L` agrees with a
-		# display-column count that this codebase cannot assume is locale-aware.
-		if (length(w) > whymax) w = substr(w, 1, whymax - 3) "…"
+		if (length(w) > whymax) {
+			fn++
+			marker = " [" fn "]"
+			# "…" is 3 bytes: reserve it and the ASCII marker so a byte-counting
+			# `wc -L` agrees with a display-column count that this codebase
+			# cannot assume is locale-aware.
+			avail = whymax - 3 - length(marker)
+			if (avail < 0) avail = 0
+			w = substr(w, 1, avail) "…" marker
+			footnote[fn] = why[i]
+		}
 		printf "%-*s  %-*s  %-*s  %s\n", w1, stem[i], w2, pri[i], w3, state[i], w
+	}
+	if (fn > 0) {
+		print ""
+		for (i = 1; i <= fn; i++) printf "[%d] %s\n", i, footnote[i]
 	}
 }
 '
