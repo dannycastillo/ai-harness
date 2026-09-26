@@ -58,7 +58,7 @@ _gate() { # <name> <tools> <command>
 _detect_go() {
 	[ -f go.mod ] || return 1
 	_detected=go.mod
-	_gate build go 'go build ./...'
+	_gate build go 'go build -o /dev/null ./...'
 	_gate vet go 'go vet ./...'
 	cat >>"$_gates_file" <<'EOF'
 ai_harness_gate_fmt() {
