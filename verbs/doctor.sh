@@ -121,10 +121,10 @@ if _l=$(command -v aih 2>/dev/null); then
 	_row launcher "$_l"
 else
 	_row launcher "aih is not on PATH; for your own shell, install the launcher:"
-	cat <<'TXT'
+	cat <<TXT
                   cat >~/.local/bin/aih <<'EOF'
                   #!/bin/sh
-                  exec "$(git rev-parse --show-toplevel)/bin/aih" "$@"
+                  exec "\${AI_HARNESS_HOME:-$AI_HARNESS_HOME}/bin/aih" "\$@"
                   EOF
                   chmod +x ~/.local/bin/aih
 TXT

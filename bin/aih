@@ -7,8 +7,18 @@
 
 set -eu
 
-AI_HARNESS_HOME=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
+_src=$0
+while [ -L "$_src" ]; do
+	_dir=$(CDPATH='' cd -- "$(dirname -- "$_src")" && pwd -P)
+	_src=$(readlink -- "$_src")
+	case $_src in
+	/*) ;;
+	*) _src="$_dir/$_src" ;;
+	esac
+done
+AI_HARNESS_HOME=$(CDPATH='' cd -- "$(dirname -- "$_src")/.." && pwd -P)
 readonly AI_HARNESS_HOME
+unset _src _dir
 
 # shellcheck source=/dev/null  # a glob cannot be followed statically
 for _lib in "$AI_HARNESS_HOME"/lib/*.sh; do . "$_lib"; done
@@ -17,14 +27,6 @@ unset _lib
 AI_HARNESS_REPO=$(git rev-parse --show-toplevel 2>/dev/null) ||
 	die "$EX_FAIL" "not inside a git repository"
 readonly AI_HARNESS_REPO
-
-# Each worktree runs its own copy. Invoking one worktree's aih against
-# another's checkout would read the wrong .ai-harness.conf and act on the wrong
-# tree, so it is refused rather than guessed at.
-if [ "$AI_HARNESS_HOME" != "$AI_HARNESS_REPO" ]; then
-	die "$EX_FAIL" "$0 belongs to $AI_HARNESS_HOME, but the current tree is $AI_HARNESS_REPO
-  use that tree's own copy, or the launcher aih doctor prints"
-fi
 
 [ -f "$AI_HARNESS_REPO/.ai-harness.conf" ] ||
 	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
