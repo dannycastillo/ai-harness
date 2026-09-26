@@ -153,19 +153,20 @@ harness working, not failing.
 ```
 
 - It must edit `AGENTS.md` to remove a personal name, so it declares it.
-- `AGENTS.md` is a hard stop in `check`. Declaring it in `Touches` does not
-  lift that; it only reserves the file against other workers.
+- `AGENTS.md` is in `AI_HARNESS_PROTECTED` by default, which makes it a hard
+  stop in `check`. Declaring it in `Touches` does not lift that; it only
+  reserves the file against other workers.
 - So `check` reports `protected-path` and the branch parks, every time.
 - Reason: `AGENTS.md` holds the rules every agent obeys. An agent that edits
   the rules must not also be able to merge the edit.
 - Resolution: a human reads the diff and merges it by hand.
 
-Other hard stops, all by design: `ai-harness/**`, `.ai-harness.conf`, a
-`AI_HARNESS_PROTECTED` path missing from `Touches`, an added test skip, a commit
-subject outside the four prefixes, a red trunk before the merge, a red gate
-after it, and a dirty trunk checkout. Nothing in that list names a path that
-is not a todo, the harness itself, or `AI_HARNESS_PROTECTED` from config: the
-harness knows nothing about the project's own conventions.
+Other hard stops, all by design: `.ai-harness.conf`, any other
+`AI_HARNESS_PROTECTED` path, an added test skip, a commit subject outside the
+four prefixes, a red trunk before the merge, a red gate after it, and a dirty
+trunk checkout. Nothing in that list names a path that is not a todo, the
+config, or `AI_HARNESS_PROTECTED`: the harness knows nothing about the
+project's own conventions.
 
 ## Configuration
 
@@ -179,6 +180,7 @@ AI_HARNESS_TRUNK="main"
 AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main worktree
 AI_HARNESS_PREFIXES="feat fix doc chore"
 AI_HARNESS_MAX_WORKERS=3
+AI_HARNESS_PROTECTED="AGENTS.md ai-harness/* .github/workflows/*"
 
 AI_HARNESS_GATES="build vet fmt test shellcheck shellsize"
 AI_HARNESS_QUICK_GATES="build vet"
@@ -192,8 +194,12 @@ AI_HARNESS_GATE_TOOLS_build="go"
   `AI_HARNESS_GATE_TOOLS_<name>` list of what it needs on `PATH`.
 - A declared gate whose tool is missing stops the run with exit `4`. It is
   never skipped. A project without a tool declares fewer gates.
-- `.ai-harness.conf` is a hard stop in `check`. An agent cannot loosen the
-  gate and merge the change.
+- `.ai-harness.conf` is always a hard stop in `check`, so an agent cannot
+  loosen the gate and merge the change. The config cannot unprotect itself.
+- `AI_HARNESS_PROTECTED` lists globs that park for a human even when a todo
+  declares them. Unset, it is `AGENTS.md ai-harness/*`; set it to add to that
+  or to free a path. The harness's own repo frees `ai-harness/*`, so that
+  the harness can build itself.
 
 ## State
 

@@ -107,8 +107,6 @@ ai_harness_ig_trunk_ok
 [ "$(git rev-parse -q --verify "refs/heads/$_branch" || :)" = "$(ai_harness_kv_get "$_pending" head)" ] ||
 	ai_harness_ig_stop "$_stem" moved "$_branch moved after the packet — resubmit"
 
-# This script runs from trunk's own tree, which the merge rewrites. check's
-# ai-harness/** stop is what keeps the merge from rewriting this file mid-run.
 if ! git merge -q --no-ff --no-commit "$_branch" >&2; then
 	git merge --abort 2>/dev/null || git reset -q --hard "$_pre"
 	ai_harness_ig_stop "$_stem" merge-conflict "$_branch does not merge onto $AI_HARNESS_TRUNK — rebase and resubmit"

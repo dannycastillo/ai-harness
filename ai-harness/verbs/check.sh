@@ -25,6 +25,9 @@ _ckt_expect() {
 
 _ckt_selftest() {
 	_ckt_bad=0
+	# Pinned, so the result does not depend on the repo's own config.
+	# shellcheck disable=SC2034  # read by ai_harness_check_paths
+	AI_HARNESS_PROTECTED='AGENTS.md src/p'
 	cd "$1" || return 1
 	git init -q
 	git symbolic-ref HEAD "refs/heads/$AI_HARNESS_TRUNK"
@@ -32,6 +35,7 @@ _ckt_selftest() {
 	printf -- '- **Touches:** src/*\n' >todo/chore-x.md
 	printf -- '- **Touches:** other/*\n' >todo/chore-y.md
 	printf 'rules\n' >AGENTS.md
+	printf 'conf\n' >.ai-harness.conf
 	printf 'a\n' >src/a && printf 'k\n' >other/k
 	printf 'one\ntwo\nthree\n' >src/a_test.go
 	git add -A
@@ -39,6 +43,8 @@ _ckt_selftest() {
 
 	_ckt_branch; printf 'b\n' >src/a; _ckt_expect 'clean pass'
 	_ckt_branch; printf 'more\n' >>AGENTS.md; _ckt_expect 'protected-path stop'
+	_ckt_branch; printf 'more\n' >>.ai-harness.conf; _ckt_expect 'protected-path stop'
+	_ckt_branch; printf 'p\n' >src/p; _ckt_expect 'protected-path stop'
 	_ckt_branch; git rm -q todo/chore-y.md; _ckt_expect 'todo-deleted stop'
 	_ckt_branch; printf 't.Skip("x")\n' >>src/a_test.go; _ckt_expect 'skip-added stop'
 	_ckt_branch; printf 'b\n' >src/a; _ckt_expect 'bad-subject stop' 'wip'

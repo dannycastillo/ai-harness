@@ -46,9 +46,6 @@ run set (1), started 08:37:38, …
   `run set` footer (`ai_harness_run_status`), which keep their place.
 - The existing comment on the byte-counted `…` stays true. The marker is
   ASCII, so it adds no new width problem.
-- Every path in Touches is under `ai-harness/`, so `aih check` parks the branch
-  as `protected-path` and it needs a hand merge. That is expected, not a
-  failure.
 
 ## Done when
 - [ ] Every WHY cut with `…` ends in ` [n]`, numbered from 1 in table order
