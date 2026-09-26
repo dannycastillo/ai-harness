@@ -70,7 +70,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `abandon <todo>`            | gives the claim back; keeps a dirty tree unless `--force`     |
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
-| human      | `status`                    | one table, a row per todo, why each is where it is            |
+| human      | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
 |            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent     |
@@ -162,9 +162,8 @@ harness working, not failing.
 - Resolution: a human reads the diff and merges it by hand.
 
 Other hard stops, all by design: `.ai-harness.conf`, any other
-`AI_HARNESS_PROTECTED` path, an added test skip, a commit subject outside the
-four prefixes, a red trunk before the merge, a red gate after it, and a dirty
-trunk checkout. Nothing in that list names a path that is not a todo, the
+`AI_HARNESS_PROTECTED` path, a commit subject outside the four prefixes, a red
+trunk before the merge, a red gate after it, and a dirty trunk checkout. Nothing in that list names a path that is not a todo, the
 config, or `AI_HARNESS_PROTECTED`: the harness knows nothing about the
 project's own conventions.
 

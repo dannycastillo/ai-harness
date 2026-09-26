@@ -49,6 +49,7 @@ case $_body in
 "") git log --no-merges --reverse --format='%s' "$AI_HARNESS_TRUNK..HEAD" >"$_tmp.body" ;;
 -) cat >"$_tmp.body" ;;
 *)
+	case $_body in /*) ;; *) _body="$AI_HARNESS_INVOKED_FROM/$_body" ;; esac
 	[ -f "$_body" ] || die "$EX_USAGE" "submit: no such body file: $_body"
 	cat -- "$_body" >"$_tmp.body"
 	;;

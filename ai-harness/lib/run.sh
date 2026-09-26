@@ -113,7 +113,7 @@ ai_harness_run_judge() {
 	fi
 	[ -n "$(ai_harness_ig_oldest)" ] || return 0
 	_rj_rc=0
-	"$AI_HARNESS_HOME/bin/aih" integrate --next >/dev/null 2>&1 || _rj_rc=$?
+	"$AI_HARNESS_HOME/bin/aih" integrate --next >/dev/null || _rj_rc=$?
 	case $_rj_rc in
 	"$EX_JUDGE") "$AI_HARNESS_HOME/bin/aih" dispatch reviewer --detach >/dev/null || log "run: could not dispatch a reviewer" ;;
 	"$EX_OK") ;;
@@ -207,8 +207,7 @@ ai_harness_run_state() {
 }
 
 # The last run's set, one line per todo with its state, under the loop's start
-# and end. Nothing when no set is on disk. The loop's final report is this
-# same function, so status and the report cannot disagree.
+# and end. Nothing when no set is on disk.
 ai_harness_run_status() {
 	[ -f "$(ai_harness_run_file set)" ] || return 0
 	_ru_ev="$(ai_harness_state_dir)/events"
@@ -264,7 +263,3 @@ ai_harness_run_status() {
 		fi
 	done
 }
-
-# The loop's final report. $1, the loop's start time, is what the events
-# already hold; the header names it from there.
-ai_harness_run_report() { ai_harness_run_status; }

@@ -7,7 +7,6 @@ _stem=
 _agent=${AI_HARNESS_AGENT:-${USER:-worker}}
 _dry=no
 _next=no
-_scratch=no
 while [ $# -gt 0 ]; do
 	case $1 in
 	--agent)
@@ -16,7 +15,6 @@ while [ $# -gt 0 ]; do
 		;;
 	--dry-run) _dry=yes ;;
 	--next) _next=yes ;;
-	--scratch) _scratch=yes ;;
 	-*) die "$EX_USAGE" "claim: unknown option: $1" ;;
 	*)
 		[ -z "$_stem" ] || die "$EX_USAGE" "claim: one todo at a time"
@@ -25,21 +23,10 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-case $_stem$_next$_scratch in
-?*nono | yesno | noyes) ;;
-*) die "$EX_USAGE" "usage: aih claim <todo-stem> | --next | --scratch [--agent <name>] [--dry-run]" ;;
+case $_stem$_next in
+?*no | yes) ;;
+*) die "$EX_USAGE" "usage: aih claim <todo-stem> | --next [--agent <name>] [--dry-run]" ;;
 esac
-
-# A scratch tree is detached, which is what keeps doctor --repair from mistaking
-# it for a claim. It reserves nothing, so no lock, pause or barrier applies.
-if [ "$_scratch" = yes ]; then
-	_wt="$(ai_harness_worktree_root)/scratch-$(printf '%s' "$_agent" | tr -c 'A-Za-z0-9_-' '-')"
-	git worktree add --detach "$_wt" "$AI_HARNESS_TRUNK" >/dev/null 2>&1 ||
-		die "$EX_FAIL" "claim: could not create $_wt — it may already exist"
-	log "claim: scratch worktree at $AI_HARNESS_TRUNK, reserving nothing"
-	printf '%s\n' "$_wt"
-	exit "$EX_OK"
-fi
 
 # Held from before --next picks until the claim file exists, so the Touches
 # check below sees every claim that could beat this one to a path.
