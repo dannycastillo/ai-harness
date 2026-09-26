@@ -2,7 +2,7 @@
 
 An adapter is how a human starts a role by hand in an editor session: a slash
 command or a rule that says *read the role doc and follow it*. Each one is a
-pointer to `roles/<role>.md` and nothing more.
+pointer to `aih role <role>` and nothing more.
 
 The loop never uses one. `dispatch` and `run` start agents through
 `AI_HARNESS_AGENT_CMD` with a one-line boot prompt, and that is the whole
@@ -16,8 +16,8 @@ the adapter. Otherwise the role doc stops being the source of truth and the
 harness stops being AI-agnostic.
 
 The check: a worker started through the adapter and one started from the boot
-prompt read the same three things, `AGENTS.md`, the todo and the role doc, and
-so behave the same.
+prompt read the same things — `AGENTS.md`, the protocol, the role doc and the
+todo — and so behave the same.
 
 ## Layout
 
@@ -49,8 +49,8 @@ not a degraded one.
 
 1. Make `adapters/<platform>/`, mirroring that platform's dot directory.
 2. Add one file per role, in whatever shape the platform reads as a command
-   or rule. The body is the pointer: *You are an AI Harness `<role>`. Read
-   `roles/<role>.md` and follow it.*
+   or rule. The body is the pointer: *You are an AI Harness `<role>`. Run
+   `aih role <role>` and follow it.*
 3. Give it whatever frontmatter the platform needs to be started by hand and
    not by the model on its own.
 4. Add the directory to the table above.

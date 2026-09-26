@@ -20,7 +20,8 @@ another project of the author's, where the harness was originally built.
 
 Partly built. `aih help` lists what your copy has.
 
-- Every verb in the tables below is built, and both role docs exist.
+- Every verb in the tables below is built, and all three role docs exist:
+  `aih role protocol`, `worker`, `reviewer`.
 - `AGENTS.md` names the two roles and no language. Trunk is written only by
   `integrate`, as a rule rather than a mechanism: a merge made by hand shows
   in `aih log` as `by hand`, since it carries no trailers.
@@ -49,9 +50,9 @@ whether it's a plain exec, a symlink, or a package manager's stub.
 checkout's copy over the installed one. Agents the loop starts do not need
 it: `run` puts the running copy's own `bin` first on their PATH.
 
-- `doctor` checks the state dir, trunk, the worktree root, every declared
-  gate's tools, and the `AGENTS.md` block's checksum. It changes nothing
-  unless given `--repair`, which rebuilds claims from git.
+- `doctor` checks the state dir, trunk, the worktree root, and every declared
+  gate's tools. It changes nothing unless given `--repair`, which rebuilds
+  claims from git.
 
 ## The two roles
 
@@ -88,6 +89,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `pause`, `resume`           | stops new claims; queued work still merges; lifts it          |
 |            | `stop [--agents]`           | kills the loop and every agent; claims and trees stay         |
 | anyone     | `help`                      | lists the verbs in this copy                                  |
+|            | `role protocol\|worker\|reviewer` | prints that role doc from the tree                       |
 
 Exit codes: `0` ok, `1` failed, `2` usage, `3` paused, `4` the environment
 cannot run the gate, `10` judgment needed.

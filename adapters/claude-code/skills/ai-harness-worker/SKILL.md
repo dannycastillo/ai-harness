@@ -4,5 +4,5 @@ description: Start an AI Harness worker in this worktree. Type it by hand in a c
 disable-model-invocation: true
 ---
 
-You are an AI Harness worker in this worktree. Read `roles/worker.md`
-and follow it.
+You are an AI Harness worker in this worktree. Run `aih role protocol` and
+`aih role worker` and follow them.
