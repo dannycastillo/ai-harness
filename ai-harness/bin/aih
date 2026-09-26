@@ -27,13 +27,22 @@ if [ "$AI_HARNESS_HOME" != "$AI_HARNESS_REPO/ai-harness" ]; then
 fi
 
 [ -f "$AI_HARNESS_REPO/.ai-harness.conf" ] ||
-	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — run ai-harness/install.sh"
+	die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see ai-harness/README.md's Setup section"
 # shellcheck source=/dev/null  # per-project, by design
 . "$AI_HARNESS_REPO/.ai-harness.conf"
 
 : "${AI_HARNESS_PROJECT:?.ai-harness.conf must set AI_HARNESS_PROJECT}"
 : "${AI_HARNESS_TRUNK:?.ai-harness.conf must set AI_HARNESS_TRUNK}"
 : "${AI_HARNESS_WORKTREE_ROOT:?.ai-harness.conf must set AI_HARNESS_WORKTREE_ROOT}"
+
+# Verbs read todo/*.md and the gate's paths relative to the repo root, so a
+# verb run from a subdirectory must still see the whole tree. A path a user
+# passes in — submit --body, for instance — is theirs and stays relative to
+# where they actually ran aih.
+AI_HARNESS_INVOKED_FROM=$(pwd -P)
+readonly AI_HARNESS_INVOKED_FROM
+export AI_HARNESS_INVOKED_FROM
+cd -- "$AI_HARNESS_REPO"
 
 verb=help
 if [ $# -gt 0 ]; then
