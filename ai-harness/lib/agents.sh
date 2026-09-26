@@ -85,14 +85,4 @@ ai_harness_agents_reap() {
 
 ai_harness_agent_alive() { [ -f "$1" ] && [ -z "$(ai_harness_kv_get "$1" exit)" ]; }
 
-# "alive <age>s" or "exited <code>", after a reap.
-ai_harness_agent_state() {
-	_as_x=$(ai_harness_kv_get "$1" exit)
-	if [ -n "$_as_x" ]; then
-		printf 'exited %s\n' "$_as_x"
-	else
-		printf 'alive %ss\n' "$(( $(date -u '+%s') - $(ai_harness_kv_get "$1" epoch) ))"
-	fi
-}
-
 ai_harness_agents_clear() { rm -f "$(ai_harness_agents_dir)/$1".*; }

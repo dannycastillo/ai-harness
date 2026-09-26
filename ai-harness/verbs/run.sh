@@ -56,7 +56,6 @@ fi
 
 ai_harness_lock_acquire run || die "$EX_FAIL" "run: a loop is already running — $(ai_harness_lock_who run)"
 trap 'ai_harness_lock_release run' EXIT
-_since=$(date -u '+%Y-%m-%dT%H:%M:%SZ')
 _set=$(ai_harness_run_set | tr '\n' ' ')
 ai_harness_event @run - started "${_set:-every todo}"
 log "run: working ${_set:-every todo}"
@@ -98,5 +97,7 @@ while :; do
 	[ "$_once" = no ] || break
 	sleep "${AI_HARNESS_RUN_POLL:-10}"
 done
-ai_harness_run_report "$_since" >&2
+# The loop's final report: the same call `aih status` makes, so the two
+# cannot disagree.
+ai_harness_run_status >&2
 exit "$_rc"
