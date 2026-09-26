@@ -2,7 +2,7 @@
 
 - **Priority:** medium
 - **Branch:** fix/worktree-root-missing-parent
-- **Touches:** ai-harness/lib/common.sh
+- **Touches:** ai-harness/lib/common.sh, ai-harness/verbs/claim.sh, ai-harness/verbs/doctor.sh, ai-harness/lib/state.sh
 - **Blocked by:** —
 
 ## Goal
