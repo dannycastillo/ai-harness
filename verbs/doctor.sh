@@ -32,6 +32,31 @@ _bad() {
 
 _row project "$AI_HARNESS_PROJECT ($AI_HARNESS_REPO)"
 
+# True when $1 is a lower three-part dotted-integer version than $2. No other
+# version format is accepted (adr-2026-09-26-one-install-per-machine).
+_version_lt() {
+	_v1=$1
+	_v2=$2
+	IFS=.
+	# shellcheck disable=SC2086  # word-splitting on IFS=. is the point
+	set -- $_v1
+	_a1=${1:-0}; _a2=${2:-0}; _a3=${3:-0}
+	# shellcheck disable=SC2086  # word-splitting on IFS=. is the point
+	set -- $_v2
+	_b1=${1:-0}; _b2=${2:-0}; _b3=${3:-0}
+	unset IFS
+	[ "$_a1" -eq "$_b1" ] || { [ "$_a1" -lt "$_b1" ]; return; }
+	[ "$_a2" -eq "$_b2" ] || { [ "$_a2" -lt "$_b2" ]; return; }
+	[ "$_a3" -lt "$_b3" ]
+}
+
+_version=$(cat "$AI_HARNESS_HOME/VERSION")
+if [ -n "${AI_HARNESS_MIN_VERSION:-}" ] && _version_lt "$_version" "$AI_HARNESS_MIN_VERSION"; then
+	_bad version "$_version is below AI_HARNESS_MIN_VERSION $AI_HARNESS_MIN_VERSION"
+else
+	_row version "$_version"
+fi
+
 _state=$(ai_harness_state_dir)
 mkdir -p "$_state" 2>/dev/null || :
 if [ -d "$_state" ] && [ -w "$_state" ]; then

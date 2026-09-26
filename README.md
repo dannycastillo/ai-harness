@@ -89,6 +89,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `pause`, `resume`           | stops new claims; queued work still merges; lifts it          |
 |            | `stop [--agents]`           | kills the loop and every agent; claims and trees stay         |
 | anyone     | `help`                      | lists the verbs in this copy                                  |
+|            | `version`                   | prints the tree's `VERSION`                                    |
 |            | `role protocol\|worker\|reviewer` | prints that role doc from the tree                       |
 
 Exit codes: `0` ok, `1` failed, `2` usage, `3` paused, `4` the environment
