@@ -70,7 +70,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `abandon <todo>`            | gives the claim back; keeps a dirty tree unless `--force`     |
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
-| human      | `status`                    | one table, a row per todo, why each is where it is            |
+| human      | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
 |            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent     |
