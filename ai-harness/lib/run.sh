@@ -113,7 +113,7 @@ ai_harness_run_judge() {
 	fi
 	[ -n "$(ai_harness_ig_oldest)" ] || return 0
 	_rj_rc=0
-	"$AI_HARNESS_HOME/bin/aih" integrate --next >/dev/null 2>&1 || _rj_rc=$?
+	"$AI_HARNESS_HOME/bin/aih" integrate --next >/dev/null || _rj_rc=$?
 	case $_rj_rc in
 	"$EX_JUDGE") "$AI_HARNESS_HOME/bin/aih" dispatch reviewer --detach >/dev/null || log "run: could not dispatch a reviewer" ;;
 	"$EX_OK") ;;
