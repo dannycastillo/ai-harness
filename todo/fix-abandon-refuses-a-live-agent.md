@@ -1,7 +1,6 @@
 # fix: abandon refuses a claim whose agent is still running
 
 - **Priority:** medium
-- **Branch:** fix/abandon-refuses-a-live-agent
 - **Touches:** verbs/abandon.sh, README.md
 - **Blocked by:** —
 

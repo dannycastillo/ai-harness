@@ -1,7 +1,6 @@
 # feat: print a todo's boot prompt without claiming it
 
 - **Priority:** low
-- **Branch:** feat/dispatch-prints-without-claiming
 - **Touches:** verbs/dispatch.sh, README.md
 - **Blocked by:** —
 
