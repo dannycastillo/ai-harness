@@ -6,56 +6,11 @@ comment policy, its language — stay in that project's `AGENTS.md`.
 
 ## Git workflow
 
-### Branch for everything
-
-`main` is only ever written by a merge. Never commit to it directly, not even a
-one-line fix or a typo. If you find yourself on `main` with uncommitted work,
-create the branch first, then commit — the work moves with you.
-
-### Four prefixes, nothing else
-
-| Prefix  | Use for                                                  |
-| ------- | -------------------------------------------------------- |
-| `feat`  | new behavior someone using the tool can observe          |
-| `fix`   | correcting behavior that was wrong                       |
-| `doc`   | documentation only, including this file                  |
-| `chore` | deps, build, tooling, restructuring — no behavior change |
-
-`chore` covers moving code as well as maintaining it: an extraction that leaves
-behavior identical is a chore however large its diff, because what a reader
-needs to check is that nothing changed.
-
-If a change doesn't fit one of these, it's doing two things — split it until
-each piece fits.
-
-### One branch unless the split earns it
-
-A minor change in scope — a decision lands mid-branch, an answer widens the work
-a little — stays on the branch you're on. Two branches cost two reviews and two
-merges, and stacking one on the other pays that to preserve an intermediate
-state nobody will check out.
-
-Nothing is pushed until the merge, so the history isn't fixed yet:
-
-```sh
-git reset --soft main   # branch pointer back to main, every change still staged
-```
-
-Recommit from there in whatever shape reads best, and rename the branch when its
-old name stops describing the work.
-
-Split only when the halves could genuinely ship apart — when someone would want
-to merge, revert, or bisect them separately.
-
-### Naming
-
-- **Branch:** `<prefix>/<short-kebab-description>` — `feat/pane-resize`
-- **Commit subject:** `<prefix>: <imperative summary>` — `fix: stop the exit erase eating a line`
-
-Imperative mood ("stop", "add", "align") because a commit describes what
-applying it *does* to the tree, not what you did yesterday. The branch prefix
-and its commits' prefixes normally match; when they don't, the branch takes the
-prefix of its most significant change.
+The project declares its prefixes in `AI_HARNESS_PREFIXES`; what each one
+means is that project's `AGENTS.md`. A prefix names both the todo file and the
+commit subject — `<prefix>: <imperative summary>` — and the branch is
+`<prefix>/<rest>` of the todo's filename, `<rest>` being everything after the
+prefix and its hyphen.
 
 ## Working in parallel
 
@@ -81,8 +36,8 @@ todo/feat-pane-resize.md    →  git switch -c feat/pane-resize
 todo/fix-empty-desc-line.md →  git switch -c fix/empty-desc-line
 ```
 
-Same four prefixes as commits. No numbers: todos have no order, and two agents
-filing at once would race for the same one.
+Same prefixes as commits, declared in `AI_HARNESS_PREFIXES`. No numbers: todos
+have no order, and two agents filing at once would race for the same one.
 
 ### Shape
 
@@ -90,7 +45,6 @@ filing at once would race for the same one.
 # <prefix>: <short title>
 
 - **Priority:** high | medium | low
-- **Branch:** <prefix>/<short-kebab>
 - **Touches:** paths or globs, or one of `ALL` / `NEW <glob>` / `UNKNOWN`
 - **Blocked by:** other todo filenames, or `—`
 
@@ -211,5 +165,9 @@ File a todo when you notice work that's real but out of scope for what you're
 doing. Don't file what you're about to do anyway, and don't file a vague
 "improve X" — if you can't write the **Done when**, you don't understand it
 well enough to hand off.
+
+Name the file with one of the project's declared `AI_HARNESS_PREFIXES`; what
+each one means is that project's `AGENTS.md`, not this one. After filing, run
+`aih plan` and fix any row it marks `invalid`.
 
 Filing is not prioritizing. The maintainer decides what gets picked up.

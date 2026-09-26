@@ -1,7 +1,6 @@
 # doc: a five-minute quickstart
 
 - **Priority:** medium
-- **Branch:** doc/quickstart-readme
 - **Touches:** README.md
 - **Blocked by:** chore-add-the-tap-and-install-script.md, feat-aih-init.md
 
