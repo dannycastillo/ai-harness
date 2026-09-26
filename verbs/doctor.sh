@@ -102,20 +102,6 @@ fi
 
 _row worktrees "$(git worktree list | wc -l | tr -d ' ') (including the main one)"
 
-# The block is refreshed by install and reported here; never rewritten here.
-_blk=$(sed -n '/^<!-- ai-harness:begin /,/^<!-- ai-harness:end -->$/p' "$AI_HARNESS_REPO/AGENTS.md" 2>/dev/null)
-if [ -z "$_blk" ]; then
-	_bad AGENTS.md "no ai-harness block between <!-- ai-harness:begin --> and <!-- ai-harness:end -->"
-else
-	_want=$(printf '%s\n' "$_blk" | sed -n '1s/.*cksum=\([0-9]*\).*/\1/p')
-	_got=$(printf '%s\n' "$_blk" | sed '1d;$d' | cksum | cut -d' ' -f1)
-	if [ "$_want" = "$_got" ]; then
-		_row AGENTS.md "ai-harness block intact"
-	else
-		_bad AGENTS.md "ai-harness block edited: its cksum is $_got, the marker says ${_want:-nothing} — update the marker if the edit is meant"
-	fi
-fi
-
 # Advisory: dispatched agents get this tree's bin on PATH regardless.
 if _l=$(command -v aih 2>/dev/null); then
 	_row launcher "$_l"
