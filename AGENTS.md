@@ -319,6 +319,14 @@ If you discover mid-task that you must touch a file the todo didn't list,
 **Done when** is the contract. Finish all of it; don't do more than it asks. If
 you spot adjacent work, file a todo for it rather than folding it in.
 
+Every box must be checkable from the worker's own worktree. `run`, `integrate`,
+and `dispatch reviewer` only run in the trunk checkout, so a box that depends
+on one of them can't be verified where the worker sits; `gate`, `check`,
+`plan`, and `status` run anywhere and are fair game. A box that can only be
+checked in the trunk checkout is a human's, and should say so: prefix it
+`human:`, or rewrite it as a static property of the diff that a worker can
+check directly.
+
 ### Picking one up
 
 1. `cd "$(aih claim <todo-stem>)"`. It cuts the branch and a worktree from
