@@ -137,7 +137,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
-|            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent     |
+|            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent (`--print` shows the boot prompt without claiming) |
 |            | `log [<todo>]`              | events and merge trailers, one timeline                       |
 |            | `run [<todo>...]`           | works a set of todos unattended, until idle or a stop         |
 |            | `pause`, `resume`           | stops new claims; queued work still merges; lifts it          |
