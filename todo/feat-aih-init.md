@@ -2,7 +2,7 @@
 
 - **Priority:** medium
 - **Branch:** feat/aih-init
-- **Touches:** NEW verbs/init.sh, NEW templates/*, README.md
+- **Touches:** NEW verbs/init.sh, NEW templates/*, README.md, lib/todo.sh, lib/graph.sh, verbs/plan.sh, verbs/status.sh, lib/gate.sh, verbs/gate.sh, verbs/doctor.sh
 - **Blocked by:** feat-aih-role.md, chore-drop-the-layout-guard.md
 
 ## Goal
