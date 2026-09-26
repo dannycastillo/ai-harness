@@ -30,7 +30,7 @@ _plan=$(ai_harness_plan)
 _stems=$(
 	{
 		for _f in todo/*.md; do
-			[ -f "$_f" ] && basename -- "$_f" .md
+			[ -f "$_f" ] && [ "$(basename -- "$_f")" != README.md ] && basename -- "$_f" .md
 		done
 		ai_harness_claim_stems
 	} | awk '!seen[$0]++'
