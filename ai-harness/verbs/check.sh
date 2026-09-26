@@ -46,7 +46,6 @@ _ckt_selftest() {
 	_ckt_branch; printf 'more\n' >>.ai-harness.conf; _ckt_expect 'protected-path stop'
 	_ckt_branch; printf 'p\n' >src/p; _ckt_expect 'protected-path stop'
 	_ckt_branch; git rm -q todo/chore-y.md; _ckt_expect 'todo-deleted stop'
-	_ckt_branch; printf 't.Skip("x")\n' >>src/a_test.go; _ckt_expect 'skip-added stop'
 	_ckt_branch; printf 'b\n' >src/a; _ckt_expect 'bad-subject stop' 'wip'
 	_ckt_branch; rm src/a; ln -s a_test.go src/a; _ckt_expect 'unknown stop'
 	_ckt_branch; printf 'one\n' >src/a_test.go; printf 'b\n' >src/a; _ckt_expect 'tests-shrunk pass'

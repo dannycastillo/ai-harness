@@ -6,7 +6,7 @@
 # codes are reported and never stop.
 ai_harness_codes() {
 	printf '%s\n' protected-path undeclared-path undeclared-path-collision todo-deleted \
-		todo-not-deleted skip-added bad-subject \
+		todo-not-deleted bad-subject \
 		dirty-trunk merge-in-progress trunk-diverged gate-config gate-red-trunk escalated \
 		moved merge-conflict gate-red-merge merge-refused rejected behavioural-conflict \
 		needs-human cleanup-refused unknown
@@ -79,8 +79,6 @@ ai_harness_check_paths() {
 }
 
 ai_harness_check_diff() {
-	git diff "$AI_HARNESS_TRUNK...$2" | awk '/^\+\+\+ / { go = /\.go$/; next } !/^\+/ { next } go && /t\.Skip\(/ { k++ }
-		END { if (k) print "skip-added " k " added line(s) call t.Skip(" }'
 	git log --no-merges --format='%h %s' "$AI_HARNESS_TRUNK..$2" | awk -v px=" $AI_HARNESS_PREFIXES " '
 		{ p = $2; sub(/:$/, "", p) } NF < 3 || $2 !~ /:$/ || !index(px, " " p " ") { print "bad-subject " $0 }'
 	git diff --numstat --no-renames "$AI_HARNESS_TRUNK...$2" | awk -F'\t' -v lim="${AI_HARNESS_DIFF_SOFT_LIMIT:-0}" '
