@@ -16,6 +16,47 @@ This repo was split out of
 [`dannycastillo/wut-command`](https://github.com/dannycastillo/wut-command),
 another project of the author's, where the harness was originally built.
 
+## Quickstart
+
+Install, once per machine:
+
+```sh
+brew install dannycastillo/tap/ai-harness
+```
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/dannycastillo/ai-harness/main/install.sh | sh
+```
+
+In the repo you want it to work:
+
+```sh
+aih init
+```
+
+It detects the stack, prints the `.ai-harness.conf` it would write, and stops
+for a `y`. Open the file it wrote and uncomment `AI_HARNESS_AGENT_CMD`,
+pointing it at your agent CLI's non-interactive flags — that's the one line
+`init` leaves for you to fill in.
+
+Write one file under `todo/`, in the shape `todo/README.md` shows, then:
+
+```sh
+aih run --all
+```
+
+What you'll see: a worktree per todo, and, for each one that passes review, a
+merge on trunk carrying `AI-Harness-*` trailers for the todo, the worker, and
+the gate. Anything a human needs to look at — a protected path, a red gate, a
+stale check — parks instead of merging; `aih status` shows what's still
+running, `aih log` shows what already happened.
+
+Agents run unattended and answer no prompts, inside the worktree `aih claim`
+cut for them — that worktree is the sandbox, not your working copy. Point
+`AI_HARNESS_AGENT_CMD` only at an agent you trust with that, because
+`.ai-harness.conf` is sourced as shell, by every verb, so whatever it names
+runs with your own permissions.
+
 ## Status
 
 Partly built. `aih help` lists what your copy has.
@@ -59,6 +100,9 @@ whether it's a plain exec, a symlink, or a package manager's stub.
 checkout's copy over the installed one. Agents the loop starts do not need
 it: `run` puts the running copy's own `bin` first on their PATH.
 
+- A repo the harness has never seen: `aih init` detects the stack, writes
+  `.ai-harness.conf`, and creates `todo/`. It always prints the config first
+  and stops for a `y` unless given `--yes`.
 - `doctor` checks the state dir, trunk, the worktree root, and every declared
   gate's tools. It changes nothing unless given `--repair`, which rebuilds
   claims from git.
@@ -86,13 +130,14 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 |            | `path <todo>`               | prints a claim's worktree, for `cd "$(aih path <todo>)"`  |
 |            | `gate --quick` / `--full`   | runs the declared checks, one line each                       |
 |            | `submit`                    | requires a clean tree and a green `gate --full`, then queues  |
-|            | `abandon <todo>`            | gives the claim back; keeps a dirty tree unless `--force`     |
+|            | `abandon <todo>`            | gives the claim back; refuses a dirty tree or a live agent unless `--force` |
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
-| human      | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
+| human      | `init [--yes] [--force]`    | writes `.ai-harness.conf` and `todo/` for a repo with neither  |
+|            | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
-|            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent     |
+|            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent (`--print` shows the boot prompt without claiming) |
 |            | `log [<todo>]`              | events and merge trailers, one timeline                       |
 |            | `run [<todo>...]`           | works a set of todos unattended, until idle or a stop         |
 |            | `pause`, `resume`           | stops new claims; queued work still merges; lifts it          |

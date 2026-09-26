@@ -30,15 +30,9 @@ ai_harness_todo_validate() {
 		return 1
 	}
 
-	_want=$(ai_harness_todo_branch_from_stem "$_stem") || {
+	ai_harness_todo_branch_from_stem "$_stem" >/dev/null || {
 		warn "$_f: '$_stem' starts with no declared prefix ($AI_HARNESS_PREFIXES)"
 		return 1
-	}
-
-	_got=$(ai_harness_todo_field "$_f" Branch)
-	[ "$_got" = "$_want" ] || {
-		warn "$_f: Branch is '$_got', but the filename means '$_want'"
-		_bad=1
 	}
 
 	case $(ai_harness_todo_field "$_f" Priority) in

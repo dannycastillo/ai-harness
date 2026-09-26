@@ -24,6 +24,20 @@ _sub="$(ai_harness_ig_file submitted)/$_stem"
 [ ! -f "$_sub" ] || [ "$_force" = yes ] ||
 	die "$EX_FAIL" "abandon: $_stem is submitted and waits for integrate — let it merge, or --force withdraws it"
 
+# A live agent may still be writing into the worktree or the shared record;
+# removing either out from under it is what re-dispatch would then race with.
+for _ag in "$(ai_harness_agents_dir)/$_stem".*; do
+	[ -f "$_ag" ] || continue
+	case $_ag in *.exit) continue ;; esac
+	ai_harness_agent_alive "$_ag" || continue
+	_pid=$(ai_harness_kv_get "$_ag" pid)
+	if [ "$_force" = yes ]; then
+		ai_harness_agent_kill "$_ag" abandoned
+	else
+		die "$EX_FAIL" "abandon: $_stem has a live $(ai_harness_kv_get "$_ag" role) agent, pid $_pid — stop it, or --force kills it"
+	fi
+done
+
 if [ -d "$_wt" ]; then
 	# Plain remove refuses when the worktree is dirty, which is exactly when
 	# abandoning silently would throw away work someone still wants.

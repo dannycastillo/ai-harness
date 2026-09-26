@@ -82,6 +82,7 @@ ai_harness_plan() {
 	done
 	for _f in todo/*.md; do
 		[ -f "$_f" ] || continue
+		[ "$(basename -- "$_f")" != README.md ] || continue
 		case $(ai_harness_todo_field "$_f" Priority) in
 		high) _pr=1 ;; medium) _pr=2 ;; low) _pr=3 ;; *) _pr=4 ;;
 		esac
