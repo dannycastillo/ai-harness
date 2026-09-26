@@ -5,7 +5,10 @@
 
 ai_harness_kv_get() {
 	[ -f "$1" ] || return 1
-	sed -n "s/^$2=//p" "$1" | head -1
+	# A concurrent integrate can remove $1 after the check above; 2>/dev/null
+	# turns that race into the same empty read as a file that was never there,
+	# instead of a "No such file" line loose in the caller's log.
+	sed -n "s/^$2=//p" "$1" 2>/dev/null | head -1
 }
 
 ai_harness_claims_dir() { printf '%s/claims\n' "$(ai_harness_state_dir)"; }
