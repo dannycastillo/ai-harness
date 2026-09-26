@@ -94,7 +94,7 @@ mv "$src" "$install_dir"
 
 cat >"$bin_dir/aih" <<EOF
 #!/bin/sh
-exec "$install_dir/bin/aih" "\$@"
+exec "\${AI_HARNESS_HOME:-$install_dir}/bin/aih" "\$@"
 EOF
 chmod +x "$bin_dir/aih"
 
