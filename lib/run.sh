@@ -8,6 +8,24 @@ ai_harness_run_file() { printf '%s/run/%s\n' "$(ai_harness_state_dir)" "$1"; }
 # one thing a restart would otherwise lose, so it lives on disk.
 ai_harness_run_set() { cat "$(ai_harness_run_file set)" 2>/dev/null || :; }
 
+# The set as a human reads it: the names on one line, or "every todo".
+ai_harness_run_set_names() {
+	_rn_s=$(ai_harness_run_set | tr '\n' ' ')
+	_rn_s=${_rn_s% }
+	printf '%s\n' "${_rn_s:-every todo}"
+}
+
+# The pid in the run lock's holder file, or nothing.
+ai_harness_run_holder_pid() { sed -n 's/^pid=//p' "$(ai_harness_lock_path run)/holder" 2>/dev/null || :; }
+
+# The pid of a loop that is alive and is not this process, else 1. The loop
+# itself renders status as it exits, and must not read as its own successor.
+ai_harness_run_live_pid() {
+	_rl_p=$(ai_harness_run_holder_pid)
+	[ -n "$_rl_p" ] && [ "$_rl_p" != "$$" ] && kill -0 "$_rl_p" 2>/dev/null || return 1
+	printf '%s\n' "$_rl_p"
+}
+
 # The plan for the set alone: a todo nobody asked for must not hold one in it.
 ai_harness_run_plan() {
 	_rp_set=$(ai_harness_run_set)
