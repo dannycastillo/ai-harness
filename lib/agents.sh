@@ -50,11 +50,11 @@ ai_harness_agent_spawn() {
 	printf '%s\n' "$_sp_pid"
 }
 
-# Every record path, one per line, exit files excluded.
+# Every record path, one per line, exit and lost-reviewer marker files excluded.
 ai_harness_agent_records() {
 	for _ar_r in "$(ai_harness_agents_dir)"/*; do
 		[ -f "$_ar_r" ] || continue
-		case $_ar_r in *.exit) continue ;; esac
+		case $_ar_r in *.exit | *.lost) continue ;; esac
 		printf '%s\n' "$_ar_r"
 	done
 }
