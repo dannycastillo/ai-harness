@@ -135,3 +135,40 @@ $2
 EOF
 	printf '%s\n' "${_cl#; }"
 }
+
+# Every overlapping pair among the todos, not just the ones the plan tripped
+# over: two held todos that meet will still collide once whatever holds them
+# clears. Stems given narrow it to those plus every claim; one line per pair.
+ai_harness_plan_overlaps() {
+	_tab=$(printf '\t')
+	_all=
+	for _f in todo/*.md; do
+		[ -f "$_f" ] || continue
+		[ "$(basename -- "$_f")" != README.md ] || continue
+		_s=$(basename -- "$_f" .md)
+		if [ $# -gt 0 ] && [ ! -f "$(ai_harness_claim_file "$_s")" ]; then
+			case " $* " in *" $_s "*) ;; *) continue ;; esac
+		fi
+		_all="$_all$_s$_tab$(ai_harness_touches_norm "$(ai_harness_todo_field "$_f" Touches)")
+"
+	done
+	_rest=$_all
+	while IFS="$_tab" read -r _a _ta; do
+		[ -n "$_a" ] || continue
+		_rest=${_rest#*
+}
+		if [ "$_ta" = ALL ]; then
+			printf '  %-34s %s\n' "$_a" 'against everything (barrier)'
+			continue
+		fi
+		while IFS="$_tab" read -r _b _tb; do
+			[ -n "$_b" ] && [ "$_tb" != ALL ] || continue
+			_w=$(ai_harness_touches_meet "$_ta" "$_tb") || continue
+			printf '  %-34s %s  on %s\n' "$_a" "$_b" "$_w"
+		done <<EOF
+$_rest
+EOF
+	done <<EOF
+$_all
+EOF
+}

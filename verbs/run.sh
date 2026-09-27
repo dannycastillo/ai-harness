@@ -99,5 +99,5 @@ while :; do
 done
 # The loop's final report: the same call `aih status` makes, so the two
 # cannot disagree.
-ai_harness_run_status >&2
+ai_harness_render_status >&2
 exit "$_rc"

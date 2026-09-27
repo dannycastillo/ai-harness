@@ -134,7 +134,7 @@ A human owns everything the two roles stop on: parks, stale locks, pauses.
 | reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
 |            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
 | human      | `init [--yes] [--force]`    | writes `.ai-harness.conf` and `todo/` for a repo with neither  |
-|            | `status`                    | one table, a row per todo; a cut WHY footnotes below           |
+|            | `status`                    | the run in progress or the last one, then every todo outside it |
 |            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
 |            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
 |            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent (`--print` shows the boot prompt without claiming) |
@@ -160,7 +160,7 @@ nothing is runnable and nothing is in flight, or on a stop a human owns.
 ```sh
 aih run fix-a fix-b --detach           # remembers the set; a bare run reuses it
 aih run --all --detach                 # every todo
-aih status                             # one table: what each todo is doing, and why
+aih status                             # the run: loop, then a row per todo and why
 aih log                                # what happened
 aih pause "trunk needs a look"         # no new claims; queued work still merges
 aih stop                               # kill the loop and every agent
@@ -180,7 +180,7 @@ By hand, one worker at a time:
 ```sh
 aih plan                               # what can run now, and why the rest cannot
 eval "$(aih dispatch worker)"          # claims the top runnable todo, starts the agent
-aih status                             # every todo's row: runnable, held, claimed, parked
+aih status                             # every todo's row: runnable, held, claimed, parked, merged
 ```
 
 `dispatch` starts `$AI_HARNESS_AGENT_CMD` with a one-line boot prompt that ends
@@ -191,7 +191,7 @@ process group, so it outlives the shell that started it, and records it:
 ```sh
 aih dispatch worker --detach           # prints the pid
 aih dispatch reviewer --detach         # after an integrate --next that exited 10
-aih status                             # the row for that todo: role, pid, and how long
+aih status                             # the row for that todo: dispatched, role, pid, how long
 aih log fix-something                  # everything that happened to one todo
 ```
 
