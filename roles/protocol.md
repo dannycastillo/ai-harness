@@ -131,7 +131,9 @@ you spot adjacent work, file a todo for it rather than folding it in.
 Every box must be checkable from the worker's own worktree. `run`, `integrate`,
 and `dispatch reviewer` only run in the trunk checkout, so a box that depends
 on one of them can't be verified where the worker sits; `gate`, `check`,
-`plan`, and `status` run anywhere and are fair game. A box that can only be
+`plan`, and `status` run anywhere and are fair game, with one caveat: while a
+loop is running, a bare `plan` covers only the todos outside its set, so a box
+about the worker's own todo reads it from `status`. A box that can only be
 checked in the trunk checkout is a human's, and should say so: prefix it
 `human:`, or rewrite it as a static property of the diff that a worker can
 check directly.

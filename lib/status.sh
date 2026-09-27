@@ -114,11 +114,12 @@ ai_harness_status_rows() {
 	done | sort -t "$_st_tab" -k1,1n -k2,2n | cut -f3-
 }
 
-# Render "flag stem state since detail" rows as one table. Columns are sized
-# from the data; a DETAIL wider than what is left of 100 columns wraps onto
-# lines indented under it, word by word, rather than being cut.
+# Render "flag stem state <col3> detail" rows as one table; $1 names the third
+# column, SINCE unless a caller says otherwise. Columns are sized from the
+# data; a DETAIL wider than what is left of 100 columns wraps onto lines
+# indented under it, word by word, rather than being cut.
 ai_harness_status_table() {
-	awk -F'\t' -v max=100 '
+	awk -F'\t' -v max=100 -v c3="${1:-SINCE}" '
 	function wrap(text, width, indent,   n, w, i, line, out) {
 		n = split(text, w, " ")
 		line = ""; out = ""
@@ -130,21 +131,23 @@ ai_harness_status_table() {
 		return out line
 	}
 	{
-		flag[NR] = $1; stem[NR] = $2; state[NR] = $3; since[NR] = $4; detail[NR] = $5
+		flag[NR] = $1; stem[NR] = $2; state[NR] = $3; third[NR] = $4; detail[NR] = $5
 		if (length($2) > w1) w1 = length($2)
 		if (length($3) > w2) w2 = length($3)
+		if (length($4) > w3) w3 = length($4)
 		n = NR
 	}
 	END {
 		if (w1 < 4) w1 = 4
 		if (w2 < 5) w2 = 5
-		col = 2 + w1 + 2 + w2 + 2 + 5 + 2
+		if (w3 < length(c3)) w3 = length(c3)
+		col = 2 + w1 + 2 + w2 + 2 + w3 + 2
 		width = max - col
 		if (width < 24) width = 24
 		indent = sprintf("%*s", col, "")
-		printf "  %-*s  %-*s  %-5s  %s\n", w1, "TODO", w2, "STATE", "SINCE", "DETAIL"
+		printf "  %-*s  %-*s  %-*s  %s\n", w1, "TODO", w2, "STATE", w3, c3, "DETAIL"
 		for (i = 1; i <= n; i++) {
-			line = sprintf("%s %-*s  %-*s  %-5s  %s", flag[i], w1, stem[i], w2, state[i], since[i], wrap(detail[i], width, indent))
+			line = sprintf("%s %-*s  %-*s  %-*s  %s", flag[i], w1, stem[i], w2, state[i], w3, third[i], wrap(detail[i], width, indent))
 			sub(/[ \t]+$/, "", line)
 			print line
 		}
@@ -208,7 +211,7 @@ ai_harness_status_run() {
 		_st_when=${_st_when#*T}
 		printf 'loop     %s at %s%s %s\n' "$_st_kind" "${_st_when%Z}" "$_st_rc" "$_st_why"
 	else
-		_st_pid=$(sed -n 's/^pid=//p' "$(ai_harness_lock_path run)/holder" 2>/dev/null)
+		_st_pid=$(sed -n 's/^pid=//p' "$(ai_harness_lock_path run)/holder" 2>/dev/null || :)
 		if [ -n "$_st_pid" ] && [ "$_st_pid" != "$$" ] && kill -0 "$_st_pid" 2>/dev/null; then
 			_st_run_alive=yes
 			[ -z "$_st_e0" ] || printf ', %s ago' "$(ai_harness_status_age $((_st_now - _st_e0)))"
@@ -240,12 +243,18 @@ ai_harness_status_outside() {
 	done
 }
 
-ai_harness_status() {
+# What every renderer here needs set first: the events file, a tab, and a
+# reap so exits are in the records before any row reads them.
+ai_harness_status_init() {
 	ai_harness_agents_reap
 	_st_ev="$(ai_harness_state_dir)/events"
 	_st_tab=$(printf '\t')
 	_st_run_alive=no
 	_st_set_stems=
+}
+
+ai_harness_status() {
+	ai_harness_status_init
 
 	if [ -f "$(ai_harness_run_file set)" ]; then
 		ai_harness_status_run
