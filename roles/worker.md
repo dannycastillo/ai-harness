@@ -26,6 +26,10 @@ the order to apply them in, and when to stop.
 - `AGENTS.md` says to: an ADR contradiction, a stale todo, a path outside
   Touches. For the first, submit with `--escalate`.
 - a Done-when box cannot be met as written.
+- a Done-when box needs a check you can't run from here. Say which box and
+  why in the submit `--body`; never start the check in the background. A
+  dispatched session is never woken by anything it started — if a check is
+  not done when you stop speaking, it is not done.
 
 ## After submitting
 
