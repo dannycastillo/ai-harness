@@ -1,8 +1,9 @@
-# The status report: the run in progress or the last one, then every todo
-# outside it. Each state word is one the events or the plan already use, so a
-# row here and a line in aih log name the same thing the same way.
+# Rendering for status and plan: one row function, one table, one header for
+# the run. Each state word is one the events or the plan already use, so a row
+# here and a line in aih log name the same thing the same way. Nothing here
+# decides anything; the schedule is ai_harness_plan and the loop is lib/run.sh.
 
-ai_harness_status_age() {
+ai_harness_render_age() {
 	if [ "$1" -lt 60 ]; then
 		printf '%ss\n' "$1"
 	elif [ "$1" -lt 3600 ]; then
@@ -14,7 +15,7 @@ ai_harness_status_age() {
 
 # Seconds since the epoch of a UTC ISO time, in awk: date -d is GNU and
 # date -j -f is BSD, and neither is portable. Days-from-civil, so no table.
-ai_harness_status_epoch() {
+ai_harness_render_epoch() {
 	printf '%s\n' "$1" | awk -F'[-T:Z]' 'NF >= 6 {
 		y = $1 + 0; m = $2 + 0; d = $3 + 0
 		if (m <= 2) { y--; m += 12 }
@@ -26,9 +27,8 @@ ai_harness_status_epoch() {
 	}'
 }
 
-# "pid <pid>, <age>" for a live agent record.
 # A path under the main worktree, printed relative to it.
-ai_harness_status_path() {
+ai_harness_render_path() {
 	_sp_root="$(ai_harness_main_worktree)/"
 	case $1 in
 	"$_sp_root"*) printf '%s\n' "${1#"$_sp_root"}" ;;
@@ -36,16 +36,17 @@ ai_harness_status_path() {
 	esac
 }
 
-ai_harness_status_agent() {
+# "pid <pid>, <age>" for a live agent record.
+ai_harness_render_agent() {
 	printf 'pid %s, %s' "$(ai_harness_kv_get "$1" pid)" \
-		"$(ai_harness_status_age $(($(date -u '+%s') - $(ai_harness_kv_get "$1" epoch))))"
+		"$(ai_harness_render_age $(($(date -u '+%s') - $(ai_harness_kv_get "$1" epoch))))"
 }
 
 # One row: rank, seq, flag, stem, state, since, detail — tab-separated. $2 is
 # the plan to read an unclaimed todo's fate from, $3 the row's place in input
 # order. Rank orders the table: finished work first, then what needs a human,
 # then what is moving, then what waits.
-ai_harness_status_row() {
+ai_harness_render_row() {
 	_sr_c=$(ai_harness_claim_file "$1")
 	_sr_flag=' ' _sr_rank=9 _sr_state=- _sr_detail=
 	_sr_since=$(awk -v s="$1" '$2 == s { t = $1 } END { if (t) { sub(/^.*T/, "", t); print substr(t, 1, 5) } }' "$_st_ev" 2>/dev/null)
@@ -65,7 +66,7 @@ ai_harness_status_row() {
 				_sr_detail="reviewer exit $(ai_harness_kv_get "$_sr_r" exit) with the judgment pending: aih dispatch reviewer --detach, or integrate --continue --park"
 			elif [ -f "$_sr_r" ] && ai_harness_agent_alive "$_sr_r"; then
 				_sr_rank=2 _sr_state=submitted
-				_sr_detail="judgment needed, reviewer $(ai_harness_status_agent "$_sr_r")"
+				_sr_detail="judgment needed, reviewer $(ai_harness_render_agent "$_sr_r")"
 			elif [ "$(ai_harness_kv_get "$_sr_pend" phase)" = judge ]; then
 				_sr_rank=2 _sr_state=submitted
 				_sr_detail='judgment needed: aih dispatch reviewer, or integrate --continue'
@@ -78,10 +79,10 @@ ai_harness_status_row() {
 		elif [ ! -f "$_sr_w" ]; then
 			_sr_rank=4 _sr_state=claimed _sr_detail="by $(ai_harness_kv_get "$_sr_c" agent)"
 		elif ai_harness_agent_alive "$_sr_w"; then
-			_sr_rank=3 _sr_state=dispatched _sr_detail="worker $(ai_harness_status_agent "$_sr_w")"
+			_sr_rank=3 _sr_state=dispatched _sr_detail="worker $(ai_harness_render_agent "$_sr_w")"
 		else
 			_sr_rank=1 _sr_flag='!' _sr_state=exited
-			_sr_detail="worker exit $(ai_harness_kv_get "$_sr_w" exit) without submitting: inspect $(ai_harness_status_path "$(ai_harness_kv_get "$_sr_w" log)"), then abandon or dispatch by hand"
+			_sr_detail="worker exit $(ai_harness_kv_get "$_sr_w" exit) without submitting: inspect $(ai_harness_render_path "$(ai_harness_kv_get "$_sr_w" log)"), then abandon or dispatch by hand"
 		fi
 		_sr_detail="$_sr_detail$_sr_note"
 	elif [ -f "$(ai_harness_todo_file "$1")" ]; then
@@ -105,12 +106,12 @@ ai_harness_status_row() {
 }
 
 # Rows for the stems on stdin, in rank order, then table order. $1 is the plan.
-ai_harness_status_rows() {
+ai_harness_render_rows() {
 	_sw_n=0
 	while read -r _sw_s; do
 		[ -n "$_sw_s" ] || continue
 		_sw_n=$((_sw_n + 1))
-		ai_harness_status_row "$_sw_s" "$1" "$_sw_n"
+		ai_harness_render_row "$_sw_s" "$1" "$_sw_n"
 	done | sort -t "$_st_tab" -k1,1n -k2,2n | cut -f3-
 }
 
@@ -118,7 +119,7 @@ ai_harness_status_rows() {
 # column, SINCE unless a caller says otherwise. Columns are sized from the
 # data; a DETAIL wider than what is left of 100 columns wraps onto lines
 # indented under it, word by word, rather than being cut.
-ai_harness_status_table() {
+ai_harness_render_table() {
 	awk -F'\t' -v max=100 -v c3="${1:-SINCE}" '
 	function wrap(text, width, indent,   n, w, i, line, out) {
 		n = split(text, w, " ")
@@ -154,7 +155,7 @@ ai_harness_status_table() {
 	}'
 }
 
-ai_harness_status_todo_stems() {
+ai_harness_render_todo_stems() {
 	for _ts_f in todo/*.md; do
 		[ -f "$_ts_f" ] && [ "$(basename -- "$_ts_f")" != README.md ] && basename -- "$_ts_f" .md
 	done
@@ -162,43 +163,28 @@ ai_harness_status_todo_stems() {
 }
 
 # The run block: two header lines, a paused line when there is one, then the
-# set's rows. Sets _st_set_stems so the caller can subtract them.
-ai_harness_status_run() {
-	_st_set=$(ai_harness_run_set)
+# set's rows. Prints the rows for $1, the set's stems.
+ai_harness_render_run() {
 	_st_start=$(awk '$2 == "@run" && $4 == "started" { n = NR; t = $1 } END { if (n) print n, t }' "$_st_ev" 2>/dev/null)
 	_st_n=${_st_start%% *}
 	_st_t0=${_st_start#* }
 	_st_end=$(awk -v n="${_st_n:-0}" 'NR > n && $2 == "@run" && ($4 == "stopped" || $4 == "idle") {
 		d = ""; for (i = 5; i <= NF; i++) d = d (i > 5 ? " " : "") $i; e = $4 "\t" $1 "\t" d }
 		END { if (e) print e }' "$_st_ev" 2>/dev/null)
-	_st_plan=$(ai_harness_run_plan)
 
-	if [ -n "$_st_set" ]; then
-		_st_set_stems=$_st_set
-		_st_names=$(printf '%s\n' "$_st_set" | tr '\n' ' ')
-		_st_names=${_st_names% }
-	else
-		_st_set_stems=$({
-			ai_harness_status_todo_stems
-			awk -v n="${_st_n:-0}" 'NR > n && ($4 == "merged" || $4 == "landed") { print $2 }' "$_st_ev" 2>/dev/null
-		} | awk 'NF && !seen[$0]++')
-		_st_names='every todo'
-	fi
-	_st_rows=$(printf '%s\n' "$_st_set_stems" | ai_harness_status_rows "$_st_plan")
+	_st_rows=$(printf '%s\n' "$1" | ai_harness_render_rows "$(ai_harness_run_plan)")
 	_st_count=$(printf '%s\n' "$_st_rows" | grep -c .)
 
-	_st_now=$(date -u '+%s')
-	_st_e0=$(ai_harness_status_epoch "$_st_t0")
-	printf 'run      %s (Total: %s)' "$_st_names" "$_st_count"
+	_st_e0=$(ai_harness_render_epoch "$_st_t0")
+	printf 'run      %s (Total: %s)' "$(ai_harness_run_set_names)" "$_st_count"
 	[ -z "$_st_start" ] || printf ', started %s UTC' "$(printf '%s' "$_st_t0" | sed 's/T/ /; s/Z$//')"
 
-	_st_run_alive=no
 	if [ -n "$_st_end" ]; then
 		_st_kind=${_st_end%%"$_st_tab"*}
 		_st_rest=${_st_end#*"$_st_tab"}
 		_st_when=${_st_rest%%"$_st_tab"*}
 		_st_why=${_st_rest#*"$_st_tab"}
-		[ -z "$_st_e0" ] || printf ', ran %s' "$(ai_harness_status_age $(($(ai_harness_status_epoch "$_st_when") - _st_e0)))"
+		[ -z "$_st_e0" ] || printf ', ran %s' "$(ai_harness_render_age $(($(ai_harness_render_epoch "$_st_when") - _st_e0)))"
 		printf '\n'
 		# The loop's own exit codes, read back from the only place it recorded
 		# them (verbs/run.sh). A stop by aih stop killed it, so it had none.
@@ -210,32 +196,43 @@ ai_harness_status_run() {
 		esac
 		_st_when=${_st_when#*T}
 		printf 'loop     %s at %s%s %s\n' "$_st_kind" "${_st_when%Z}" "$_st_rc" "$_st_why"
+	elif _st_pid=$(ai_harness_run_live_pid); then
+		[ -z "$_st_e0" ] || printf ', %s ago' "$(ai_harness_render_age $(($(date -u '+%s') - _st_e0)))"
+		printf '\nloop     pid %s alive' "$_st_pid"
+		_st_log="$(ai_harness_state_dir)/log/run.log"
+		[ ! -f "$_st_log" ] || printf ', log %s' "$(ai_harness_render_path "$_st_log")"
+		printf '\n'
+	elif _st_pid=$(ai_harness_run_holder_pid) && [ -n "$_st_pid" ] && [ "$_st_pid" != "$$" ]; then
+		printf '\nloop     pid %s dead, no stop recorded\n' "$_st_pid"
 	else
-		_st_pid=$(sed -n 's/^pid=//p' "$(ai_harness_lock_path run)/holder" 2>/dev/null || :)
-		if [ -n "$_st_pid" ] && [ "$_st_pid" != "$$" ] && kill -0 "$_st_pid" 2>/dev/null; then
-			_st_run_alive=yes
-			[ -z "$_st_e0" ] || printf ', %s ago' "$(ai_harness_status_age $((_st_now - _st_e0)))"
-			printf '\nloop     pid %s alive' "$_st_pid"
-			_st_log="$(ai_harness_state_dir)/log/run.log"
-			[ ! -f "$_st_log" ] || printf ', log %s' "$(ai_harness_status_path "$_st_log")"
-			printf '\n'
-		elif [ -n "$_st_pid" ] && [ "$_st_pid" != "$$" ]; then
-			printf '\nloop     pid %s dead, no stop recorded\n' "$_st_pid"
-		else
-			printf '\nloop     no stop recorded\n'
-		fi
+		printf '\nloop     no stop recorded\n'
 	fi
-	_st_paused="$(ai_harness_state_dir)/PAUSED"
-	[ ! -f "$_st_paused" ] || printf 'paused   "%s" until aih resume\n' "$(cat "$_st_paused")"
+	ai_harness_render_paused
 	printf '\n'
-	printf '%s\n' "$_st_rows" | ai_harness_status_table
+	printf '%s\n' "$_st_rows" | ai_harness_render_table
 }
 
-# Every todo and claim that is not in the run set. A case inside $( ) trips
-# bash 3.2 on the pattern's ")", hence a function.
-ai_harness_status_outside() {
-	_so_set="$_st_tab$(printf '%s' "$_st_set_stems" | tr '\n' "$_st_tab")$_st_tab"
-	for _so_s in $(ai_harness_status_todo_stems | awk 'NF && !seen[$0]++'); do
+# The paused line, when a pause is set.
+ai_harness_render_paused() {
+	_rp_f="$(ai_harness_state_dir)/PAUSED"
+	[ ! -f "$_rp_f" ] || printf 'paused   "%s" until aih resume\n' "$(cat "$_rp_f")"
+}
+
+# The stems of an every-todo run: what is in todo/ and claimed now, plus what
+# merged since the loop started, since a merged todo has left both.
+ai_harness_render_run_stems() {
+	_rs_n=$(awk '$2 == "@run" && $4 == "started" { n = NR } END { print n + 0 }' "$_st_ev" 2>/dev/null)
+	{
+		ai_harness_render_todo_stems
+		awk -v n="${_rs_n:-0}" 'NR > n && ($4 == "merged" || $4 == "landed") { print $2 }' "$_st_ev" 2>/dev/null
+	} | awk 'NF && !seen[$0]++'
+}
+
+# Every todo and claim that is not in $1, a set of stems one per line. A case
+# inside $( ) trips bash 3.2 on the pattern's ")", hence a function.
+ai_harness_render_outside() {
+	_so_set="$_st_tab$(printf '%s' "$1" | tr '\n' "$_st_tab")$_st_tab"
+	for _so_s in $(ai_harness_render_todo_stems | awk 'NF && !seen[$0]++'); do
 		case $_so_set in
 		*"$_st_tab$_so_s$_st_tab"*) ;;
 		*) printf '%s\n' "$_so_s" ;;
@@ -245,38 +242,39 @@ ai_harness_status_outside() {
 
 # What every renderer here needs set first: the events file, a tab, and a
 # reap so exits are in the records before any row reads them.
-ai_harness_status_init() {
+ai_harness_render_init() {
 	ai_harness_agents_reap
 	_st_ev="$(ai_harness_state_dir)/events"
 	_st_tab=$(printf '\t')
-	_st_run_alive=no
-	_st_set_stems=
 }
 
-ai_harness_status() {
-	ai_harness_status_init
+ai_harness_render_status() {
+	ai_harness_render_init
 
 	if [ -f "$(ai_harness_run_file set)" ]; then
-		ai_harness_status_run
-		_st_out=$(ai_harness_status_outside)
+		_st_set=$(ai_harness_run_set)
+		[ -n "$_st_set" ] || _st_set=$(ai_harness_render_run_stems)
+		ai_harness_render_run "$_st_set"
+		_st_out=$(ai_harness_render_outside "$_st_set")
 		printf '\n'
 		if [ -z "$_st_out" ]; then
 			printf 'outside this run: none\n'
 		else
-			_st_rows=$(printf '%s\n' "$_st_out" | ai_harness_status_rows "$(ai_harness_plan)")
+			_st_rows=$(printf '%s\n' "$_st_out" | ai_harness_render_rows "$(ai_harness_plan)")
 			printf 'outside this run (Total: %s)\n' "$(printf '%s\n' "$_st_rows" | grep -c .)"
-			printf '%s\n' "$_st_rows" | ai_harness_status_table
+			printf '%s\n' "$_st_rows" | ai_harness_render_table
 		fi
 	else
 		printf 'no run yet. aih run --all starts one; aih plan shows what it would do.\n\n'
-		_st_rows=$(ai_harness_status_todo_stems | awk 'NF && !seen[$0]++' | ai_harness_status_rows "$(ai_harness_plan)")
-		[ -z "$_st_rows" ] || printf '%s\n' "$_st_rows" | ai_harness_status_table
+		_st_rows=$(ai_harness_render_todo_stems | awk 'NF && !seen[$0]++' | ai_harness_render_rows "$(ai_harness_plan)")
+		[ -z "$_st_rows" ] || printf '%s\n' "$_st_rows" | ai_harness_render_table
 	fi
 
+	# The run lock is the loop line's business while its holder is alive.
 	for _st_l in "$(ai_harness_state_dir)"/lock/*; do
 		[ -d "$_st_l" ] || continue
 		_st_name=$(basename -- "$_st_l")
-		[ "$_st_name" != run ] || [ "$_st_run_alive" = no ] || continue
+		[ "$_st_name" != run ] || ! ai_harness_run_live_pid >/dev/null || continue
 		printf '\nlock %s %s\n' "$_st_name" "$(ai_harness_lock_who "$_st_name")"
 		ai_harness_lock_is_stale "$_st_name" && printf '  ! stale: inspect, then aih unlock %s --force\n' "$_st_name"
 	done

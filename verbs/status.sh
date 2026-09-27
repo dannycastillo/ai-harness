@@ -4,4 +4,4 @@
 
 [ $# -eq 0 ] || die "$EX_USAGE" "usage: aih status"
 
-ai_harness_status
+ai_harness_render_status
