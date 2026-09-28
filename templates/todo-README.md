@@ -1,7 +1,18 @@
 # todo/
 
 One file per open piece of work. `ls todo/` is the backlog — if a file is
-here, the work is open.
+here, the work is open. Only a file directly under `todo/` counts: a
+subdirectory is never the backlog, however many todos it holds.
+
+`todo/new/` is the inbox an agent files into. Nothing there is claimed,
+planned, or run until a human moves it into `todo/` by hand:
+
+```sh
+git mv todo/new/<file>.md todo/
+```
+
+A project may keep other subdirectories of its own — `todo/backlog/` or
+whatever it likes — and the rule is the same for all of them.
 
 Run `aih role protocol` for the rules: filenames, `Touches`, `Blocked by`,
 and how a todo is picked up and cleared. This file is only the shape and one

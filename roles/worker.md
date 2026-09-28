@@ -14,7 +14,9 @@ the order to apply them in, and when to stop.
    - `--body <file>` or `--body -` for the merge's summary prose. Omitted, the
      branch's commit subjects stand in.
    - `--note "<observation>"` for adjacent work you noticed and did not do. It
-     reaches the merge commit as `AI-Harness-Notes:`. Repeatable.
+     reaches the merge commit as `AI-Harness-Notes:`. Repeatable. If it's
+     worth a todo, file it into `todo/new/` (protocol's **Filing one**) and
+     still note it here — the note alone is not filing.
    - `--escalate "<reason>"` when the work contradicts an accepted ADR. The
      submission then parks for a human instead of merging.
 

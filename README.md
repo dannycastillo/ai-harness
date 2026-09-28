@@ -101,8 +101,10 @@ checkout's copy over the installed one. Agents the loop starts do not need
 it: `run` puts the running copy's own `bin` first on their PATH.
 
 - A repo the harness has never seen: `aih init` detects the stack, writes
-  `.ai-harness.conf`, and creates `todo/`. It always prints the config first
-  and stops for a `y` unless given `--yes`.
+  `.ai-harness.conf`, and creates `todo/`, including its `todo/new/` inbox —
+  the only place an agent files a todo without a human moving it into the
+  backlog by hand. It always prints the config first and stops for a `y`
+  unless given `--yes`.
 - `doctor` checks the state dir, trunk, the worktree root, and every declared
   gate's tools. It changes nothing unless given `--repair`, which rebuilds
   claims from git.
