@@ -83,6 +83,22 @@ ai_harness_ig_gate_stop() {
 	ai_harness_ig_stop "$@"
 }
 
+# Push the trunk to its upstream after a green merge, when the conf asks for
+# it. A plain push is fast-forward only, never --force: this only ever ships
+# what the merge just added, so a non-fast-forward means someone else reached
+# the upstream first, and that's the trunk's problem, not this merge's. A
+# rejected push never undoes the merge; the next green merge tries again.
+ai_harness_ig_push() {
+	[ "${AI_HARNESS_PUSH_TRUNK:-no}" = yes ] || return 0
+	_ip_up=$(git rev-parse -q --verify --abbrev-ref "$AI_HARNESS_TRUNK@{upstream}" 2>/dev/null) || return 0
+	_ip_remote=$(git config "branch.$AI_HARNESS_TRUNK.remote") || return 0
+	if git push "$_ip_remote" "$AI_HARNESS_TRUNK" >&2; then
+		return 0
+	fi
+	ai_harness_event @trunk - unpushed "$AI_HARNESS_TRUNK is ahead of $_ip_up and the push was rejected"
+	warn "integrate: push to $_ip_up was rejected — $AI_HARNESS_TRUNK is ahead locally; push it by hand"
+}
+
 # Unforced on purpose: each refuses on unmerged work or a dirty tree, which is
 # exactly when cleanup should stop.
 ai_harness_ig_cleanup() {

@@ -207,9 +207,24 @@ ai_harness_render_run() {
 	else
 		printf '\nloop     no stop recorded\n'
 	fi
+	_st_ahead=$(ai_harness_render_trunk_ahead)
+	[ -z "$_st_ahead" ] || printf 'trunk    %s\n' "$_st_ahead"
 	ai_harness_render_paused
 	printf '\n'
 	printf '%s\n' "$_st_rows" | ai_harness_render_table
+}
+
+# "N ahead of <upstream>, ..." when the trunk has an upstream and leads it,
+# empty otherwise. Shared by status and doctor so the two say the same thing.
+ai_harness_render_trunk_ahead() {
+	_ta_up=$(git rev-parse -q --verify --abbrev-ref "$AI_HARNESS_TRUNK@{upstream}" 2>/dev/null) || return 0
+	_ta_n=$(git rev-list --count "$_ta_up..$AI_HARNESS_TRUNK")
+	[ "$_ta_n" -gt 0 ] || return 0
+	if [ "${AI_HARNESS_PUSH_TRUNK:-no}" = yes ]; then
+		printf '%s ahead of %s, aih integrate pushes it' "$_ta_n" "$_ta_up"
+	else
+		printf '%s ahead of %s, push it by hand' "$_ta_n" "$_ta_up"
+	fi
 }
 
 # The paused line, when a pause is set.

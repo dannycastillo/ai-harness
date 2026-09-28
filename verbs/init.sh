@@ -163,6 +163,10 @@ _project=$(basename -- "$AI_HARNESS_REPO")
 [ -n "$_trunk" ] || _trunk=$(git -C "$AI_HARNESS_REPO" symbolic-ref --short HEAD 2>/dev/null) ||
 	die "$EX_FAIL" "init: HEAD is detached — pass --trunk <name>"
 
+_push_trunk=no
+git -C "$AI_HARNESS_REPO" rev-parse -q --verify --abbrev-ref "$_trunk@{upstream}" >/dev/null 2>&1 &&
+	_push_trunk=yes
+
 {
 	printf 'AI_HARNESS_GATES="%s"\n' "${_gates# }"
 	printf 'AI_HARNESS_QUICK_GATES="%s"\n\n' "$_quick"
@@ -171,6 +175,7 @@ _project=$(basename -- "$AI_HARNESS_REPO")
 
 sed -e "s|@PROJECT@|$_project|g" -e "s|@TRUNK@|$_trunk|g" \
 	-e "s|@WORKTREE_ROOT@|../$_project-worktrees|g" -e "s|@DETECTED@|$_detected|g" \
+	-e "s|@PUSH_TRUNK@|$_push_trunk|g" \
 	"$AI_HARNESS_HOME/templates/ai-harness.conf" |
 	awk -v f="$_gateblock" '
 		$0 == "@GATES@" { while ((getline l < f) > 0) print l; next }
