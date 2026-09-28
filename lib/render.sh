@@ -173,7 +173,7 @@ ai_harness_render_run() {
 		END { if (e) print e }' "$_st_ev" 2>/dev/null)
 
 	_st_rows=$(printf '%s\n' "$1" | ai_harness_render_rows "$(ai_harness_run_plan)")
-	_st_count=$(printf '%s\n' "$_st_rows" | grep -c .)
+	_st_count=$(printf '%s\n' "$_st_rows" | grep -c . || :)
 
 	_st_e0=$(ai_harness_render_epoch "$_st_t0")
 	printf 'run      %s (Total: %s)' "$(ai_harness_run_set_names)" "$_st_count"
