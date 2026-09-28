@@ -246,6 +246,7 @@ AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main wor
 AI_HARNESS_PREFIXES="feat fix doc chore"
 AI_HARNESS_MAX_WORKERS=3
 AI_HARNESS_PROTECTED="AGENTS.md .github/workflows/*"
+AI_HARNESS_PUSH_TRUNK="yes"
 
 AI_HARNESS_GATES="build vet fmt test shellcheck shellsize"
 AI_HARNESS_QUICK_GATES="build vet"
@@ -264,6 +265,11 @@ AI_HARNESS_GATE_TOOLS_build="go"
 - `AI_HARNESS_PROTECTED` lists globs that park for a human even when a todo
   declares them. Unset, it is `AGENTS.md`; set it to add to that or to free
   a path.
+- `AI_HARNESS_PUSH_TRUNK="yes"` pushes the trunk to its upstream, fast-forward
+  only, after every green merge. Unset or `no`: the merge stays local and a
+  human pushes it. `aih init` sets it from whether the trunk already tracks a
+  remote. A rejected push warns and leaves the merge on trunk; `aih status`
+  and `aih doctor` show an ahead trunk either way.
 
 ## State
 

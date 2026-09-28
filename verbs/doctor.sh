@@ -72,10 +72,11 @@ if [ -z "$_trunk_wt" ]; then
 	_row trunk "$AI_HARNESS_TRUNK is not checked out anywhere — integrate cannot run"
 else
 	_dirty=$(git -C "$_trunk_wt" status --porcelain | wc -l | tr -d ' ')
+	_ahead=$(ai_harness_render_trunk_ahead)
 	if [ "$_dirty" -eq 0 ]; then
-		_row trunk "$AI_HARNESS_TRUNK at $_trunk_wt"
+		_row trunk "$AI_HARNESS_TRUNK at $_trunk_wt${_ahead:+, $_ahead}"
 	else
-		_row trunk "$AI_HARNESS_TRUNK at $_trunk_wt ($_dirty uncommitted — integrate would park)"
+		_row trunk "$AI_HARNESS_TRUNK at $_trunk_wt ($_dirty uncommitted — integrate would park)${_ahead:+, $_ahead}"
 	fi
 fi
 
