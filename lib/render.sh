@@ -285,11 +285,16 @@ ai_harness_render_status() {
 		[ -z "$_st_rows" ] || printf '%s\n' "$_st_rows" | ai_harness_render_table
 	fi
 
-	# The run lock is the loop line's business while its holder is alive.
+	# The run lock is the loop line's business while its holder is alive, and
+	# while its holder is this process: a loop renders its own exit report
+	# before its EXIT trap releases the lock, and must not list itself.
 	for _st_l in "$(ai_harness_state_dir)"/lock/*; do
 		[ -d "$_st_l" ] || continue
 		_st_name=$(basename -- "$_st_l")
-		[ "$_st_name" != run ] || ! ai_harness_run_live_pid >/dev/null || continue
+		if [ "$_st_name" = run ]; then
+			ai_harness_run_live_pid >/dev/null && continue
+			[ "$(ai_harness_run_holder_pid)" != "$$" ] || continue
+		fi
 		printf '\nlock %s %s\n' "$_st_name" "$(ai_harness_lock_who "$_st_name")"
 		ai_harness_lock_is_stale "$_st_name" && printf '  ! stale: inspect, then aih unlock %s --force\n' "$_st_name"
 	done
