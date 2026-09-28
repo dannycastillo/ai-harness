@@ -168,8 +168,11 @@ doing. Don't file what you're about to do anyway, and don't file a vague
 "improve X" — if you can't write the **Done when**, you don't understand it
 well enough to hand off.
 
-Name the file with one of the project's declared `AI_HARNESS_PREFIXES`; what
-each one means is that project's `AGENTS.md`, not this one. After filing, run
-`aih plan` and fix any row it marks `invalid`.
+File it into `todo/new/`, not `todo/` directly: only `todo/` is the backlog,
+and nothing under `todo/new/` is claimed, planned, or run until a human moves
+it there by hand — `git mv todo/new/<file>.md todo/`. Name the file with one
+of the project's declared `AI_HARNESS_PREFIXES`; what each one means is that
+project's `AGENTS.md`, not this one. After filing, run `aih plan` and fix any
+row it marks `invalid`.
 
 Filing is not prioritizing. The maintainer decides what gets picked up.

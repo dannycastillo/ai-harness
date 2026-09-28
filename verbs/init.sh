@@ -198,9 +198,10 @@ fi
 cp "$_conf_out" "$_conf"
 printf 'init: config written to %s\n' "$_conf"
 
-mkdir -p "$AI_HARNESS_REPO/todo"
+mkdir -p "$AI_HARNESS_REPO/todo/new"
 cp "$AI_HARNESS_HOME/templates/todo-README.md" "$AI_HARNESS_REPO/todo/README.md"
-printf 'init: todo/README.md written\n'
+: >"$AI_HARNESS_REPO/todo/new/.keep"
+printf 'init: todo/README.md and todo/new/.keep written\n'
 
 # --------------------------------------------------------------- adapters
 #
