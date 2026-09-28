@@ -92,7 +92,9 @@ a human's to resolve, and a human merging by hand is the one exception to the
 rule above. `aih log` marks such a merge `by hand`, because it carries no
 trailers.
 
-Never push a branch, merge, or force-push anything without being asked.
+Never push a branch, merge, or force-push anything without being asked. The
+one exception is `aih integrate` pushing the trunk after a green merge when
+`.ai-harness.conf` sets `AI_HARNESS_PUSH_TRUNK` to `yes`: the conf is the asking.
 
 ## ai-harness
 
