@@ -288,8 +288,10 @@ sed -n 's/^| `\([^`]*\)` *| `\([^`]*\)\/` .*/\1 \2/p' "$AI_HARNESS_HOME/adapters
 
 if [ "$_mode" = new ]; then
 	git -C "$_dest" add -A
-	git -C "$_dest" commit -q -m 'chore: add ai-harness'
-	printf 'init: committed on %s as "chore: add ai-harness"\n' "$_trunk"
+	_subject='chore: add ai-harness'
+	[ "$_copy" = no ] || _subject="chore: open trunk $_trunk"
+	git -C "$_dest" commit -q -m "$_subject"
+	printf 'init: committed on %s as "%s"\n' "$_trunk" "$_subject"
 	printf 'init: done — trunk %s is at %s\n\n  cd %s\n  aih doctor\n' "$_trunk" "$_dest" "$_dest"
 else
 	printf 'init: done — commit these on %s, then aih doctor\n' "$_trunk"
