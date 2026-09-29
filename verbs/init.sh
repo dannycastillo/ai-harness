@@ -1,34 +1,94 @@
 # init — configure a repo the harness has never seen
 #
-#   aih init [--yes] [--force] [--trunk <name>]
+#   aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]
 #
 # Detects the stack (go.mod, package.json, Cargo.toml, pyproject.toml,
 # Makefile, in that order), prints the .ai-harness.conf it would write, and
 # stops for a y unless given --yes or run from a terminal. Writes the config,
 # todo/README.md, and the adapters whose dot directory already exists.
-# Refuses to overwrite an existing .ai-harness.conf without --force. Never
-# copies the tree and never edits AGENTS.md (adr-2026-09-26-one-install-
+# Never copies the tree and never edits AGENTS.md (adr-2026-09-26-one-install-
 # per-machine, adr-2026-09-26-the-protocol-ships-with-the-tree).
+#
+# The trunk is either a new branch in its own worktree, ai-harness-YYYYMMDD,
+# where init commits what it wrote (the default), or the branch checked out
+# here (--trunk), where it commits nothing and refuses to overwrite an
+# existing .ai-harness.conf without --force.
 
 _yes=no
 _force=no
 _trunk=
+_newname=
+_mode=
 while [ $# -gt 0 ]; do
 	case $1 in
 	--yes | -y) _yes=yes ;;
 	--force) _force=yes ;;
 	--trunk)
+		[ "$_mode" != new ] || die "$EX_USAGE" "init: --trunk and --new-trunk are exclusive"
 		[ $# -gt 1 ] || die "$EX_USAGE" "init: --trunk needs a name"
-		_trunk=$2 && shift
+		_trunk=$2 && _mode=here && shift
 		;;
-	*) die "$EX_USAGE" "usage: aih init [--yes] [--force] [--trunk <name>]" ;;
+	--new-trunk)
+		[ "$_mode" != here ] || die "$EX_USAGE" "init: --trunk and --new-trunk are exclusive"
+		_mode=new
+		case ${2:-} in
+		'' | -*) ;;
+		*) _newname=$2 && shift ;;
+		esac
+		;;
+	*) die "$EX_USAGE" "usage: aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]" ;;
 	esac
 	shift
 done
 
-_conf="$AI_HARNESS_REPO/.ai-harness.conf"
-[ ! -f "$_conf" ] || [ "$_force" = yes ] ||
-	die "$EX_FAIL" "init: $_conf already exists — use --force to overwrite"
+_project=$(basename -- "$(ai_harness_main_worktree)")
+_here=$(git symbolic-ref --short HEAD 2>/dev/null) || _here=
+
+if [ -z "$_mode" ]; then
+	if [ "$_yes" = yes ]; then
+		_mode=new
+	else
+		[ -t 0 ] || die "$EX_USAGE" "init: refusing to write unconfirmed — pass --yes, or run from a terminal"
+		printf 'Trunk: where ai-harness merges finished work\n'
+		printf '  1) new branch and worktree %s  (recommended)\n' "ai-harness-$(date -u +%Y%m%d)"
+		[ -z "$_here" ] || printf '  2) the branch checked out here (%s)\n' "$_here"
+		printf 'Choice [1]: '
+		read -r _ans
+		case $_ans in
+		1 | '') _mode=new ;;
+		2) [ -n "$_here" ] || die "$EX_USAGE" "init: HEAD is detached — pass --trunk <name>"
+			_mode=here ;;
+		*) die "$EX_USAGE" "init: choose 1 or 2" ;;
+		esac
+		printf '\n'
+	fi
+fi
+
+_src_conf="$AI_HARNESS_REPO/.ai-harness.conf"
+_dest=$AI_HARNESS_REPO
+_copy=no
+if [ "$_mode" = new ]; then
+	[ -n "$_newname" ] || _newname="ai-harness-$(date -u +%Y%m%d)"
+	git check-ref-format --branch "$_newname" >/dev/null 2>&1 ||
+		die "$EX_USAGE" "init: not a branch name: $_newname"
+	! git show-ref -q --verify "refs/heads/$_newname" ||
+		die "$EX_FAIL" "init: branch $_newname already exists"
+	_trunk=$_newname
+	AI_HARNESS_WORKTREE_ROOT=
+	[ ! -f "$_src_conf" ] || {
+		_copy=yes
+		AI_HARNESS_WORKTREE_ROOT=$(sed -n 's/^AI_HARNESS_WORKTREE_ROOT="\(.*\)"$/\1/p' "$_src_conf" | head -1)
+	}
+	[ -n "$AI_HARNESS_WORKTREE_ROOT" ] || AI_HARNESS_WORKTREE_ROOT="../$_project-worktrees"
+	_wroot=$(ai_harness_worktree_root) ||
+		die "$EX_FAIL" "init: the worktree root's parent does not exist: $_wroot"
+	_dest="$_wroot/$_newname"
+	[ ! -e "$_dest" ] || die "$EX_FAIL" "init: $_dest already exists"
+else
+	[ ! -f "$_src_conf" ] || [ "$_force" = yes ] ||
+		die "$EX_FAIL" "init: $_src_conf already exists — use --force to overwrite"
+fi
+_conf="$_dest/.ai-harness.conf"
 
 _tmp_dir="$(ai_harness_state_dir)/tmp"
 mkdir -p "$_tmp_dir"
@@ -159,9 +219,8 @@ fi
 
 # ------------------------------------------------------------------- config
 
-_project=$(basename -- "$AI_HARNESS_REPO")
-[ -n "$_trunk" ] || _trunk=$(git -C "$AI_HARNESS_REPO" symbolic-ref --short HEAD 2>/dev/null) ||
-	die "$EX_FAIL" "init: HEAD is detached — pass --trunk <name>"
+[ -n "$_trunk" ] || _trunk=$_here
+[ -n "$_trunk" ] || die "$EX_FAIL" "init: HEAD is detached — pass --trunk <name>"
 
 _push_trunk=no
 git -C "$AI_HARNESS_REPO" rev-parse -q --verify --abbrev-ref "$_trunk@{upstream}" >/dev/null 2>&1 &&
@@ -173,13 +232,18 @@ git -C "$AI_HARNESS_REPO" rev-parse -q --verify --abbrev-ref "$_trunk@{upstream}
 	cat "$_gates_file"
 } >"$_gateblock"
 
-sed -e "s|@PROJECT@|$_project|g" -e "s|@TRUNK@|$_trunk|g" \
-	-e "s|@WORKTREE_ROOT@|../$_project-worktrees|g" -e "s|@DETECTED@|$_detected|g" \
-	-e "s|@PUSH_TRUNK@|$_push_trunk|g" \
-	"$AI_HARNESS_HOME/templates/ai-harness.conf" |
-	awk -v f="$_gateblock" '
-		$0 == "@GATES@" { while ((getline l < f) > 0) print l; next }
-		{ print }' >"$_conf_out"
+if [ "$_copy" = yes ]; then
+	sed "s|^AI_HARNESS_TRUNK=.*|AI_HARNESS_TRUNK=\"$_trunk\"|" "$_src_conf" >"$_conf_out"
+	_detected="the config here, with only AI_HARNESS_TRUNK changed"
+else
+	sed -e "s|@PROJECT@|$_project|g" -e "s|@TRUNK@|$_trunk|g" \
+		-e "s|@WORKTREE_ROOT@|../$_project-worktrees|g" -e "s|@DETECTED@|$_detected|g" \
+		-e "s|@PUSH_TRUNK@|$_push_trunk|g" \
+		"$AI_HARNESS_HOME/templates/ai-harness.conf" |
+		awk -v f="$_gateblock" '
+			$0 == "@GATES@" { while ((getline l < f) > 0) print l; next }
+			{ print }' >"$_conf_out"
+fi
 
 printf -- '--- .ai-harness.conf (detected from %s) ---\n' "$_detected"
 cat "$_conf_out"
@@ -195,12 +259,16 @@ if [ "$_yes" = no ]; then
 	esac
 fi
 
+if [ "$_mode" = new ]; then
+	git worktree add -q -b "$_trunk" "$_dest" HEAD
+fi
+
 cp "$_conf_out" "$_conf"
 printf 'init: config written to %s\n' "$_conf"
 
-mkdir -p "$AI_HARNESS_REPO/todo/new"
-cp "$AI_HARNESS_HOME/templates/todo-README.md" "$AI_HARNESS_REPO/todo/README.md"
-: >"$AI_HARNESS_REPO/todo/new/.keep"
+mkdir -p "$_dest/todo/new"
+cp "$AI_HARNESS_HOME/templates/todo-README.md" "$_dest/todo/README.md"
+: >"$_dest/todo/new/.keep"
 printf 'init: todo/README.md and todo/new/.keep written\n'
 
 # --------------------------------------------------------------- adapters
@@ -212,10 +280,17 @@ printf 'init: todo/README.md and todo/new/.keep written\n'
 sed -n 's/^| `\([^`]*\)` *| `\([^`]*\)\/` .*/\1 \2/p' "$AI_HARNESS_HOME/adapters/README.md" |
 	while read -r _platform _dir; do
 		[ -d "$AI_HARNESS_HOME/adapters/$_platform" ] || continue
-		if [ -d "$AI_HARNESS_REPO/$_dir" ]; then
-			cp -R "$AI_HARNESS_HOME/adapters/$_platform/." "$AI_HARNESS_REPO/$_dir/"
+		if [ -d "$_dest/$_dir" ]; then
+			cp -R "$AI_HARNESS_HOME/adapters/$_platform/." "$_dest/$_dir/"
 			printf 'init: adapter %s copied into %s/\n' "$_platform" "$_dir"
 		fi
 	done
 
-printf 'init: done — aih doctor\n'
+if [ "$_mode" = new ]; then
+	git -C "$_dest" add -A
+	git -C "$_dest" commit -q -m 'chore: add ai-harness'
+	printf 'init: committed on %s as "chore: add ai-harness"\n' "$_trunk"
+	printf 'init: done — trunk %s is at %s\n\n  cd %s\n  aih doctor\n' "$_trunk" "$_dest" "$_dest"
+else
+	printf 'init: done — commit these on %s, then aih doctor\n' "$_trunk"
+fi

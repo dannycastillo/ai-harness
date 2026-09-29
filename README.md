@@ -34,10 +34,25 @@ In the repo you want it to work:
 aih init
 ```
 
-It detects the stack, prints the `.ai-harness.conf` it would write, and stops
-for a `y`. Open the file it wrote and uncomment `AI_HARNESS_AGENT_CMD`,
-pointing it at your agent CLI's non-interactive flags — that's the one line
-`init` leaves for you to fill in.
+It asks where finished work merges. The default is a new branch and worktree,
+`ai-harness-YYYYMMDD` beside your repo; `init` commits the config there and
+never touches the branch you have checked out. It then detects the stack,
+prints the `.ai-harness.conf` it would write, and stops for a `y`. Move to the
+new trunk:
+
+```sh
+cd ../<project>-worktrees/ai-harness-YYYYMMDD
+aih doctor
+```
+
+Open the config it wrote and uncomment `AI_HARNESS_AGENT_CMD`, pointing it at
+your agent CLI's non-interactive flags — that's the one line `init` leaves for
+you to fill in, and it is yours to commit on the trunk.
+
+The other answer, `aih init --trunk <branch>`, makes the branch checked out
+here the trunk. It writes the files and commits nothing, so you commit them;
+and while `integrate` merges there, that checkout must stay clean, or every
+merge parks. Run from any other checkout, `aih` says which directory to use.
 
 Write one file under `todo/`, in the shape `todo/README.md` shows, then:
 
@@ -56,6 +71,19 @@ cut for them — that worktree is the sandbox, not your working copy. Point
 `AI_HARNESS_AGENT_CMD` only at an agent you trust with that, because
 `.ai-harness.conf` is sourced as shell, by every verb, so whatever it names
 runs with your own permissions.
+
+## Removing it
+
+A trunk merged into `main` is closed by removing what `init` made:
+
+```sh
+git worktree remove <worktree-root>/ai-harness-YYYYMMDD
+git branch -d ai-harness-YYYYMMDD
+```
+
+To drop the harness from a repo altogether, also delete
+`$(git rev-parse --git-common-dir)/ai-harness`, the coordination state, and
+the worktree root once it is empty. `aih init` opens the next trunk.
 
 ## Status
 

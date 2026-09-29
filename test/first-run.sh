@@ -1,0 +1,129 @@
+#!/bin/sh
+# first-run — what a first-time user sees: aih init's two trunks, and where aih
+# will and will not run afterwards (README, Quickstart). Prints one line per
+# scenario; exit 1 if any failed. A test, not a gate: it builds scratch repos
+# and clones this checkout.
+
+set -u
+
+HOME_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
+AIH=${AI_HARNESS_HOME:-$HOME_DIR}/bin/aih
+S=$(CDPATH='' cd -- "$(mktemp -d)" && pwd -P)
+trap 'rm -rf "$S"' EXIT
+export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
+DATE=$(date -u +%Y%m%d)
+TRUNK=ai-harness-$DATE
+
+scratch() { # <dir>
+	mkdir -p "$1" && git -C "$1" init -q -b main && echo x >"$1/f" &&
+		git -C "$1" add f && git -C "$1" commit -q -m 'chore: first'
+}
+
+# says <dir> <text> <aih args...>: aih fails from <dir> and prints <text>
+says() {
+	_d=$1 _want=$2
+	shift 2
+	_out=$(cd "$_d" && "$AIH" "$@" 2>&1)
+	[ $? -ne 0 ] || { echo "expected failure from $_d: $*" && return 1; }
+	case $_out in
+	*"$_want"*) return 0 ;;
+	esac
+	printf 'from %s, wanted:\n  %s\ngot:\n  %s\n' "$_d" "$_want" "$_out"
+	return 1
+}
+
+runs() { # <dir> <aih args...>
+	_d=$1
+	shift
+	(cd "$_d" && "$AIH" "$@" >/dev/null 2>&1) || { echo "aih $* failed in $_d" && return 1; }
+}
+
+dated_trunk() {
+	P=$S/a/proj
+	W=$S/a/proj-worktrees/$TRUNK
+	scratch "$P" || return 1
+	_before=$(git -C "$P" rev-parse main)
+	(cd "$P" && "$AIH" init --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	git -C "$P" show-ref -q --verify "refs/heads/$TRUNK" || { echo "no branch $TRUNK" && return 1; }
+	[ -f "$W/.ai-harness.conf" ] || { echo "no config in $W" && return 1; }
+	[ "$(git -C "$W" log -1 --format=%s)" = 'chore: add ai-harness' ] || { echo "wrong commit" && return 1; }
+	[ -z "$(git -C "$W" status --porcelain)" ] || { echo "trunk tree is dirty" && return 1; }
+	[ "$(git -C "$P" rev-parse main)" = "$_before" ] || { echo "main moved" && return 1; }
+	[ -z "$(git -C "$P" status --porcelain)" ] && [ ! -e "$P/.ai-harness.conf" ] || { echo "main tree touched" && return 1; }
+	runs "$W" doctor || return 1
+
+	# before the merge, main has no config
+	says "$P" "run this from the $TRUNK checkout: cd $W" status || return 1
+	git -C "$P" worktree add -q --detach "$S/a/scratch" main || return 1
+	says "$S/a/scratch" "run this from the $TRUNK checkout: cd $W" status || return 1
+
+	mkdir -p "$W/todo"
+	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$W/todo/feat-t.md"
+	git -C "$W" add -A && git -C "$W" commit -q -m 'chore: a todo' || return 1
+	C=$(cd "$W" && "$AIH" claim feat-t) || { echo "claim failed" && return 1; }
+	runs "$C" status || return 1
+	runs "$W" status || return 1
+	for _v in "run --all" "integrate --next"; do
+		# shellcheck disable=SC2086  # the verb and its flag are two words
+		says "$C" "$TRUNK" $_v || return 1
+	done
+
+	says "$C" "aih:" dispatch reviewer || return 1
+
+	# after the merge, main holds the config and names the trunk
+	git -C "$P" merge -q --no-ff -m 'Merge trunk' "$TRUNK" || return 1
+	git -C "$S/a/scratch" checkout -q --detach main || return 1
+	says "$P" "run this from the $TRUNK checkout: cd $W" status || return 1
+	says "$S/a/scratch" "run this from the $TRUNK checkout: cd $W" status || return 1
+	runs "$C" status || return 1
+	runs "$W" status || return 1
+
+	git -C "$P" worktree remove --force "$W" || return 1
+	says "$P" "$TRUNK is not checked out anywhere" status || return 1
+	says "$S/a/scratch" "$TRUNK is not checked out anywhere" status || return 1
+	runs "$C" status
+}
+
+trunk_here() {
+	P=$S/b/proj
+	scratch "$P" || return 1
+	_before=$(git -C "$P" rev-parse HEAD)
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	[ -f "$P/.ai-harness.conf" ] || { echo "no config here" && return 1; }
+	[ "$(git -C "$P" rev-parse HEAD)" = "$_before" ] || { echo "init committed" && return 1; }
+	[ "$(git -C "$P" branch --list | wc -l)" -eq 1 ] && [ "$(git -C "$P" worktree list | wc -l)" -eq 1 ] ||
+		{ echo "init made a branch or worktree" && return 1; }
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	runs "$P" doctor || return 1
+	runs "$P" status || return 1
+	git -C "$P" worktree add -q --detach "$S/b/scratch" || return 1
+	says "$S/b/scratch" "run this from the main checkout: cd $P" status
+}
+
+next_trunk() {
+	P=$S/c/proj
+	git clone -q "$HOME_DIR" "$P" || return 1
+	(cd "$P" && "$AIH" init --new-trunk t-next --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	W=$S/c/ai-harness-worktrees/t-next
+	[ -f "$W/.ai-harness.conf" ] || { echo "no config in $W" && return 1; }
+	_d=$(diff "$P/.ai-harness.conf" "$W/.ai-harness.conf" | grep -c '^[<>]')
+	[ "$_d" -eq 2 ] || { echo "config differs in $_d lines, not 2" && return 1; }
+	diff "$P/.ai-harness.conf" "$W/.ai-harness.conf" | grep -q "^> AI_HARNESS_TRUNK=\"t-next\"" ||
+		{ echo "the difference is not AI_HARNESS_TRUNK" && return 1; }
+}
+
+_fail=0
+run() {
+	if ("$1") >"$S/out.$1" 2>&1; then
+		printf 'ok    %s\n' "$1"
+	else
+		printf 'FAIL  %s\n' "$1"
+		sed -n '1,40p' "$S/out.$1" | sed 's/^/      /'
+		_fail=1
+	fi
+}
+
+run dated_trunk
+run trunk_here
+run next_trunk
+exit "$_fail"

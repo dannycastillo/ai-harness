@@ -94,3 +94,52 @@ ai_harness_trunk_worktree() {
 }
 
 ai_harness_is_defined() { command -v "$1" >/dev/null 2>&1; }
+
+# Whether a path is the worktree of some claim. Claim files are parsed, never
+# sourced (state.sh).
+ai_harness_is_claim_worktree() {
+	_icw_p=$(CDPATH='' cd -- "$1" 2>/dev/null && pwd -P) || return 1
+	for _icw_f in "$(ai_harness_state_dir)"/claims/*; do
+		[ -f "$_icw_f" ] || continue
+		_icw_w=$(ai_harness_kv_get "$_icw_f" worktree)
+		[ -n "$_icw_w" ] || continue
+		_icw_w=$(CDPATH='' cd -- "$_icw_w" 2>/dev/null && pwd -P) || continue
+		[ "$_icw_w" != "$_icw_p" ] || return 0
+	done
+	return 1
+}
+
+# The one checkout whose config names its own branch as trunk, printed as
+# "<branch><TAB><path>". Claim worktrees carry the same config on other
+# branches, so they do not count. Fails on none or several.
+ai_harness_sole_trunk_checkout() {
+	_stc=$(git worktree list --porcelain | awk '
+		/^worktree / { p = substr($0, 10) }
+		/^branch refs\/heads\// { print p "\t" substr($0, 19) }
+	' | while IFS='	' read -r _stc_p _stc_b; do
+		_stc_t=$(sed -n 's/^AI_HARNESS_TRUNK="\(.*\)"$/\1/p' "$_stc_p/.ai-harness.conf" 2>/dev/null | head -1)
+		if [ "$_stc_t" = "$_stc_b" ]; then
+			printf '%s\t%s\n' "$_stc_b" "$_stc_p"
+		fi
+	done)
+	case $_stc in
+	'' | *'
+'*) return 1 ;;
+	esac
+	printf '%s\n' "$_stc"
+}
+
+# Verbs read the tree they run in, so they run from the trunk checkout or a
+# claim's, and anywhere else is redirected rather than guessed at.
+ai_harness_require_trunk_or_claim() {
+	_top=$(CDPATH='' cd -- "$AI_HARNESS_REPO" && pwd -P)
+	_tw=$(ai_harness_trunk_worktree)
+	if [ -n "$_tw" ]; then
+		[ "$(CDPATH='' cd -- "$_tw" && pwd -P)" != "$_top" ] || return 0
+	fi
+	ai_harness_is_claim_worktree "$_top" && return 0
+	if [ -n "$_tw" ]; then
+		die "$EX_FAIL" "run this from the $AI_HARNESS_TRUNK checkout: cd $_tw"
+	fi
+	die "$EX_FAIL" "$AI_HARNESS_TRUNK is not checked out anywhere; check it out, or start a new trunk with aih init"
+}
