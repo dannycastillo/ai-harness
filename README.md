@@ -35,8 +35,9 @@ aih init
 ```
 
 It asks where finished work merges. The default is a new branch and worktree,
-`ai-harness-YYYYMMDD` beside your repo; `init` commits the config there and
-never touches the branch you have checked out. It then detects the stack,
+`ai-harness-YYYYMMDD` beside your repo; `init` commits the config there
+(`chore: add ai-harness`, or `chore: open trunk <name>` when a config already
+exists) and never touches the branch you have checked out. It then detects the stack,
 prints the `.ai-harness.conf` it would write, and stops for a `y`. Move to the
 new trunk:
 

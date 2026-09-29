@@ -110,6 +110,13 @@ next_trunk() {
 	[ "$_d" -eq 2 ] || { echo "config differs in $_d lines, not 2" && return 1; }
 	diff "$P/.ai-harness.conf" "$W/.ai-harness.conf" | grep -q "^> AI_HARNESS_TRUNK=\"t-next\"" ||
 		{ echo "the difference is not AI_HARNESS_TRUNK" && return 1; }
+	[ "$(git -C "$W" log -1 --format=%s)" = 'chore: open trunk t-next' ] || { echo "wrong commit" && return 1; }
+
+	(cd "$W" && "$AIH" init --new-trunk second --yes) >/dev/null 2>&1 || { echo "second init failed" && return 1; }
+	W2=$S/c/ai-harness-worktrees/second
+	[ "$(git -C "$W2" log -1 --format=%s)" = 'chore: open trunk second' ] || { echo "wrong second commit" && return 1; }
+	_files=$(git -C "$W2" show --format= --name-only HEAD)
+	[ "$_files" = .ai-harness.conf ] || { echo "second commit touches: $_files" && return 1; }
 }
 
 _fail=0
