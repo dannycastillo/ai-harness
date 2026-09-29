@@ -1,9 +1,14 @@
 #!/bin/sh
 # render-fixture — a throwaway repo in every state status and plan can show,
-# rendered by both. No assertions: run it before and after a rendering change
-# and diff the two outputs. Pids and ages vary; normalize them first:
+# rendered by both. Run it before and after a rendering change and diff the
+# two outputs for wording. Pids and ages vary; normalize them first:
 #
 #   sh test/render-fixture.sh | sed -E 's/pid [0-9]+/pid N/g' > after.txt
+#
+# The exit status says whether any verb crashed: every section, D included,
+# expects plan and status to exit 0. A nonzero exit prints rc=N where it
+# happened, is counted, and the last line is "crashes: N" (naming the
+# sections when N is not 0); the script exits 1 unless N is 0.
 
 set -eu
 
@@ -66,17 +71,25 @@ cat > $D/events <<EOF
 2026-09-26T09:43:55Z @run - stopped reviewer-lost fix-a: aih dispatch reviewer --detach, or integrate --continue --park
 EOF
 
-both() { "$AIH" plan || echo "rc=$?"; echo "--- status"; "$AIH" status || echo "rc=$?"; }
-echo "=== A: stopped run, named set"; both
+CRASHES=0 BAD=
+crash() { echo "rc=$1"; CRASHES=$((CRASHES + 1)); BAD="$BAD $2"; }
+both() {
+  "$AIH" plan || crash $? "$1 plan"
+  echo "--- status"
+  "$AIH" status || crash $? "$1 status"
+}
+echo "=== A: stopped run, named set"; both A
 echo; echo "=== B: live loop, named set"
 grep -v '@run - stopped' $D/events > $D/e && mv $D/e $D/events
-mkdir -p $D/lock/run; printf 'pid=%s\nhost=box\nverb=run\nsince=x\nepoch=%s\n' $SP $((NOW-2500)) > $D/lock/run/holder; both
-echo; echo "=== C: live loop, every todo"; : > $D/run/set; both
-echo; echo "=== D: explicit stems during a live loop"; "$AIH" plan fix-empty-desc-line feat-status-rewrite || echo "rc=$?"
+mkdir -p $D/lock/run; printf 'pid=%s\nhost=box\nverb=run\nsince=x\nepoch=%s\n' $SP $((NOW-2500)) > $D/lock/run/holder; both B
+echo; echo "=== C: live loop, every todo"; : > $D/run/set; both C
+echo; echo "=== D: explicit stems during a live loop"; "$AIH" plan fix-empty-desc-line feat-status-rewrite || crash $? "D plan"
 echo; echo "=== E: dead loop lock, paused, every worker slot taken"
-printf 'pid=99997\nhost=box\nverb=run\nsince=x\nepoch=1\n' > $D/lock/run/holder; echo "trunk needs a look" > $D/PAUSED; both
+printf 'pid=99997\nhost=box\nverb=run\nsince=x\nepoch=1\n' > $D/lock/run/holder; echo "trunk needs a look" > $D/PAUSED; both E
 echo; echo "=== F: no run, an invalid todo, a barrier"
 rm -rf $D/lock $D/PAUSED
 printf '# feat: bad\n\n- **Priority:** urgent\n- **Touches:** lib/x.sh\n' > todo/feat-bad-priority.md
-printf '# doc: license\n\n- **Priority:** high\n- **Touches:** ALL\n' > todo/doc-add-license.md; both
-echo; echo "=== G: empty backlog"; rm -rf $D/claims $D/agents $D/submitted $D/parked $D/integrate todo/*.md; both
+printf '# doc: license\n\n- **Priority:** high\n- **Touches:** ALL\n' > todo/doc-add-license.md; both F
+echo; echo "=== G: empty backlog"; rm -rf $D/claims $D/agents $D/submitted $D/parked $D/integrate todo/*.md; both G
+echo "crashes: $CRASHES${BAD:+ (${BAD# })}"
+[ "$CRASHES" -eq 0 ] || exit 1

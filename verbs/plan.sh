@@ -26,14 +26,14 @@ _names='every todo'
 _scope='set'
 if _run_pid=$(ai_harness_run_live_pid); then
 	_set=$(ai_harness_run_set)
-	if [ -n "$_set" ]; then
-		_run_total=$(printf '%s\n' "$_set" | grep -c .)
+	if ai_harness_run_is_fixed; then
+		_run_total=$(printf '%s\n' "$_set" | grep -c . || :)
 	else
 		_run_total=$(ai_harness_render_todo_stems | awk 'NF && !seen[$0]++' | grep -c .)
 	fi
 	printf 'run      %s (Total: %s) is in progress, pid %s; aih status shows it\n' "$(ai_harness_run_set_names)" "$_run_total" "$_run_pid"
 	if [ -z "$_stems" ]; then
-		[ -n "$_set" ] || { printf 'plan     nothing is outside this run\n' && exit "$EX_OK"; }
+		ai_harness_run_is_fixed || { printf 'plan     nothing is outside this run\n' && exit "$EX_OK"; }
 		for _s in $(ai_harness_render_outside "$_set"); do
 			[ -f "$(ai_harness_todo_file "$_s")" ] && _stems="$_stems $_s"
 		done

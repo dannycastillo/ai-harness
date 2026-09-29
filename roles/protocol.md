@@ -17,7 +17,8 @@ prefix and its hyphen.
 Several agents work this backlog at once, one todo each, in separate
 worktrees, and trunk is written only by `aih integrate`. The mechanics and
 the verbs are in `README.md`; each role's sequence is in `roles/`. `aih run`
-works a set of todos unattended.
+works a set of todos unattended. The set is fixed when the run starts: work
+filed during a run waits for the next one.
 
 `Touches` in a todo is a reservation on paths, and it is the only thing that
 decides what runs side by side.
@@ -170,7 +171,9 @@ well enough to hand off.
 
 File it into `todo/new/`, not `todo/` directly: only `todo/` is the backlog,
 and nothing under `todo/new/` is claimed, planned, or run until a human moves
-it there by hand — `git mv todo/new/<file>.md todo/`. Name the file with one
+it there by hand — `git mv todo/new/<file>.md todo/`. A branch that adds a
+file at the top level of `todo/` parks with `todo-added`; any subdirectory is
+free. Name the file with one
 of the project's declared `AI_HARNESS_PREFIXES`; what each one means is that
 project's `AGENTS.md`, not this one. After filing, run `aih plan` and fix any
 row it marks `invalid`.

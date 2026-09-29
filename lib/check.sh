@@ -6,7 +6,7 @@
 # codes are reported and never stop.
 ai_harness_codes() {
 	printf '%s\n' protected-path undeclared-path undeclared-path-collision todo-deleted \
-		todo-not-deleted bad-subject \
+		todo-added todo-not-deleted bad-subject \
 		dirty-trunk merge-in-progress trunk-diverged gate-config gate-red-trunk escalated \
 		moved merge-conflict gate-red-merge merge-refused rejected behavioural-conflict \
 		needs-human cleanup-refused unknown
@@ -57,8 +57,9 @@ ai_harness_check_paths() {
 	printf '%s\n' "$_ck_d" | while IFS='	' read -r _ck_s _ck_p; do
 		_ck_code='' _ck_why=''
 		case $_ck_s:$_ck_p in
-		: | *:"$_ck_todo" | A:todo/*.md) continue ;;
+		: | *:"$_ck_todo" | A:todo/*/*.md) continue ;;
 		[!ADM]:*) _ck_code=unknown _ck_why=" is status $_ck_s, which check has no rule for" ;;
+		A:todo/*.md) _ck_code=todo-added _ck_why=" is filed into the backlog; file it in todo/new/" ;;
 		D:todo/*.md) _ck_code=todo-deleted ;;
 		# Fixed, not configurable: a config that could unprotect itself would
 		# let one merge loosen every check after it (ADR-09).

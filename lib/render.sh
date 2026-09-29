@@ -233,8 +233,9 @@ ai_harness_render_paused() {
 	[ ! -f "$_rp_f" ] || printf 'paused   "%s" until aih resume\n' "$(cat "$_rp_f")"
 }
 
-# The stems of an every-todo run: what is in todo/ and claimed now, plus what
-# merged since the loop started, since a merged todo has left both.
+# The stems of a run whose set file is empty and unmarked, one from before
+# --all wrote the set: what is in todo/ and claimed now, plus what merged
+# since the loop started, since a merged todo has left both.
 ai_harness_render_run_stems() {
 	_rs_n=$(awk '$2 == "@run" && $4 == "started" { n = NR } END { print n + 0 }' "$_st_ev" 2>/dev/null)
 	{
@@ -268,7 +269,7 @@ ai_harness_render_status() {
 
 	if [ -f "$(ai_harness_run_file set)" ]; then
 		_st_set=$(ai_harness_run_set)
-		[ -n "$_st_set" ] || _st_set=$(ai_harness_render_run_stems)
+		ai_harness_run_is_fixed || _st_set=$(ai_harness_render_run_stems)
 		ai_harness_render_run "$_st_set"
 		_st_out=$(ai_harness_render_outside "$_st_set")
 		printf '\n'

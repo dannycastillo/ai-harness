@@ -34,16 +34,35 @@ In the repo you want it to work:
 aih init
 ```
 
-It detects the stack, prints the `.ai-harness.conf` it would write, and stops
-for a `y`. Open the file it wrote and uncomment `AI_HARNESS_AGENT_CMD`,
-pointing it at your agent CLI's non-interactive flags — that's the one line
-`init` leaves for you to fill in.
+It asks where finished work merges. The default is a new branch and worktree,
+`ai-harness-YYYYMMDD` beside your repo; `init` commits the config there and
+never touches the branch you have checked out. It then detects the stack,
+prints the `.ai-harness.conf` it would write, and stops for a `y`. Move to the
+new trunk:
+
+```sh
+cd ../<project>-worktrees/ai-harness-YYYYMMDD
+aih doctor
+```
+
+Open the config it wrote and uncomment `AI_HARNESS_AGENT_CMD`, pointing it at
+your agent CLI's non-interactive flags — that's the one line `init` leaves for
+you to fill in, and it is yours to commit on the trunk.
+
+The other answer, `aih init --trunk <branch>`, makes the branch checked out
+here the trunk. It writes the files and commits nothing, so you commit them;
+and while `integrate` merges there, that checkout must stay clean, or every
+merge parks. Run from any other checkout, `aih` says which directory to use.
 
 Write one file under `todo/`, in the shape `todo/README.md` shows, then:
 
 ```sh
 aih run --all
 ```
+
+A run is the set of todos present when it starts. A todo filed into `todo/`
+while it runs is listed by `aih status` under `outside this run` and waits for
+the next one.
 
 What you'll see: a worktree per todo, and, for each one that passes review, a
 merge on trunk carrying `AI-Harness-*` trailers for the todo, the worker, and
@@ -56,6 +75,19 @@ cut for them — that worktree is the sandbox, not your working copy. Point
 `AI_HARNESS_AGENT_CMD` only at an agent you trust with that, because
 `.ai-harness.conf` is sourced as shell, by every verb, so whatever it names
 runs with your own permissions.
+
+## Removing it
+
+A trunk merged into `main` is closed by removing what `init` made:
+
+```sh
+git worktree remove <worktree-root>/ai-harness-YYYYMMDD
+git branch -d ai-harness-YYYYMMDD
+```
+
+To drop the harness from a repo altogether, also delete
+`$(git rev-parse --git-common-dir)/ai-harness`, the coordination state, and
+the worktree root once it is empty. `aih init` opens the next trunk.
 
 ## Status
 
@@ -161,7 +193,7 @@ nothing is runnable and nothing is in flight, or on a stop a human owns.
 
 ```sh
 aih run fix-a fix-b --detach           # remembers the set; a bare run reuses it
-aih run --all --detach                 # every todo
+aih run --all --detach                 # the todos in todo/ now; later ones wait for the next run
 aih status                             # the run: loop, then a row per todo and why
 aih log                                # what happened
 aih pause "trunk needs a look"         # no new claims; queued work still merges
@@ -230,7 +262,8 @@ harness working, not failing.
 - Resolution: a human reads the diff and merges it by hand.
 
 Other hard stops, all by design: `.ai-harness.conf`, any other
-`AI_HARNESS_PROTECTED` path, a commit subject outside the four prefixes, a red
+`AI_HARNESS_PROTECTED` path, a todo added at the top level of `todo/`
+(`todo-added`; file it in `todo/new/`), a commit subject outside the four prefixes, a red
 trunk before the merge, a red gate after it, and a dirty trunk checkout. Nothing in that list names a path that is not a todo, the
 config, or `AI_HARNESS_PROTECTED`: the harness knows nothing about the
 project's own conventions.
@@ -244,7 +277,7 @@ A Go project's config, for example:
 ```sh
 AI_HARNESS_PROJECT="wut"
 AI_HARNESS_TRUNK="main"
-AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main worktree
+AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main worktree; see Worktree layouts
 AI_HARNESS_PREFIXES="feat fix doc chore"
 AI_HARNESS_MAX_WORKERS=3
 AI_HARNESS_PROTECTED="AGENTS.md .github/workflows/*"
@@ -257,6 +290,22 @@ AI_HARNESS_EXCLUSIVE_GATES="test"
 ai_harness_gate_build() { go build ./...; }
 AI_HARNESS_GATE_TOOLS_build="go"
 ```
+
+### Worktree layouts
+
+Trunk may be checked out anywhere; every verb runs from it. Supported:
+
+- a normal clone, its main checkout on any branch, trunk in a linked worktree
+- a bare repository at `project/.bare`, trunk at `project/trunk`
+- the same bare repository with trunk at `project/worktrees/trunk` and
+  `AI_HARNESS_WORKTREE_ROOT="worktrees"`
+
+A relative `AI_HARNESS_WORKTREE_ROOT` resolves against the main worktree. A
+bare repository has none, so it resolves against the folder holding `.bare`:
+the default `../<project>-worktrees` lands beside `project/`, and a bare name
+such as `worktrees` lands inside it. `doctor --repair` rebuilds a claim only
+for a worktree under the root whose branch has a todo on trunk, so trunk and
+scratch worktrees there are reported and left alone.
 
 - A gate is a function named `ai_harness_gate_<name>` plus a
   `AI_HARNESS_GATE_TOOLS_<name>` list of what it needs on `PATH`.
