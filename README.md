@@ -244,7 +244,7 @@ A Go project's config, for example:
 ```sh
 AI_HARNESS_PROJECT="wut"
 AI_HARNESS_TRUNK="main"
-AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main worktree
+AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main worktree; see Worktree layouts
 AI_HARNESS_PREFIXES="feat fix doc chore"
 AI_HARNESS_MAX_WORKERS=3
 AI_HARNESS_PROTECTED="AGENTS.md .github/workflows/*"
@@ -257,6 +257,22 @@ AI_HARNESS_EXCLUSIVE_GATES="test"
 ai_harness_gate_build() { go build ./...; }
 AI_HARNESS_GATE_TOOLS_build="go"
 ```
+
+### Worktree layouts
+
+Trunk may be checked out anywhere; every verb runs from it. Supported:
+
+- a normal clone, its main checkout on any branch, trunk in a linked worktree
+- a bare repository at `project/.bare`, trunk at `project/trunk`
+- the same bare repository with trunk at `project/worktrees/trunk` and
+  `AI_HARNESS_WORKTREE_ROOT="worktrees"`
+
+A relative `AI_HARNESS_WORKTREE_ROOT` resolves against the main worktree. A
+bare repository has none, so it resolves against the folder holding `.bare`:
+the default `../<project>-worktrees` lands beside `project/`, and a bare name
+such as `worktrees` lands inside it. `doctor --repair` rebuilds a claim only
+for a worktree under the root whose branch has a todo on trunk, so trunk and
+scratch worktrees there are reported and left alone.
 
 - A gate is a function named `ai_harness_gate_<name>` plus a
   `AI_HARNESS_GATE_TOOLS_<name>` list of what it needs on `PATH`.

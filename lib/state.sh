@@ -42,6 +42,15 @@ ai_harness_claim_count() {
 # Rebuild claims/ from git, which is the authority. Drops claims whose worktree
 # is gone and reconstructs claims for worktrees that have none — the window
 # between `worktree add` succeeding and the claim file being written.
+# Prints the stem when the worktree at $1 on branch $2 is a claim: its todo
+# still stands on trunk, where it stays until the merge. Trunk's own worktree
+# and scratch worktrees fail it without being named.
+ai_harness_state_worktree_claim() {
+	_wc=$(ai_harness_stem_of_branch "$2")
+	git cat-file -e "$AI_HARNESS_TRUNK:$(ai_harness_todo_file "$_wc")" 2>/dev/null || return 1
+	printf '%s\n' "$_wc"
+}
+
 ai_harness_state_repair() {
 	_cd=$(ai_harness_claims_dir)
 	_root=$(ai_harness_worktree_root) || {
@@ -70,16 +79,15 @@ ai_harness_state_repair() {
 		"$_root"/*) ;;
 		*) continue ;;
 		esac
-		_stem=$(basename -- "$_p")
+		_stem=$(ai_harness_state_worktree_claim "$_p" "$_b") || {
+			log "  ~ $_p  not a claim: no todo on $AI_HARNESS_TRUNK"
+			continue
+		}
 		printf '%s\n' "$_stem" >>"$_seen"
 		[ -f "$_cd/$_stem" ] && continue
 		_todo=$(ai_harness_todo_file "$_stem")
-		_touches=
-		# The todo is gone from the branch once the work is finished, so read
-		# the reservation from trunk, where it still stands until the merge.
-		if git cat-file -e "$AI_HARNESS_TRUNK:$_todo" 2>/dev/null; then
-			_touches=$(git show "$AI_HARNESS_TRUNK:$_todo" | sed -n 's/^- \*\*Touches:\*\* *//p' | head -1)
-		fi
+		_touches=$(git show "$AI_HARNESS_TRUNK:$_todo" | sed -n 's/^- \*\*Touches:\*\* *//p' | head -1)
+		[ -n "$_touches" ] || _touches=UNKNOWN
 		{
 			printf 'todo=%s\n' "$_todo"
 			printf 'branch=%s\n' "$_b"
