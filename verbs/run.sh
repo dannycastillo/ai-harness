@@ -21,7 +21,7 @@ while [ $# -gt 0 ]; do
 	*)
 		_s=${1#todo/}
 		_s=${_s%.md}
-		ai_harness_todo_validate "$_s" >/dev/null 2>&1 || die "$EX_USAGE" "run: no such todo: $_s"
+		ai_harness_todo_validate "$_s" || die "$EX_USAGE" "run: $_s did not validate"
 		_stems="$_stems$_s
 "
 		;;
