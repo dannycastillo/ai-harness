@@ -9,3 +9,4 @@ packaging export-ignore
 test export-ignore
 todo export-ignore
 install.sh export-ignore
+SECURITY.md export-ignore
