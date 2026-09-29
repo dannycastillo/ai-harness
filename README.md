@@ -60,6 +60,10 @@ Write one file under `todo/`, in the shape `todo/README.md` shows, then:
 aih run --all
 ```
 
+A run is the set of todos present when it starts. A todo filed into `todo/`
+while it runs is listed by `aih status` under `outside this run` and waits for
+the next one.
+
 What you'll see: a worktree per todo, and, for each one that passes review, a
 merge on trunk carrying `AI-Harness-*` trailers for the todo, the worker, and
 the gate. Anything a human needs to look at — a protected path, a red gate, a
@@ -189,7 +193,7 @@ nothing is runnable and nothing is in flight, or on a stop a human owns.
 
 ```sh
 aih run fix-a fix-b --detach           # remembers the set; a bare run reuses it
-aih run --all --detach                 # every todo
+aih run --all --detach                 # the todos in todo/ now; later ones wait for the next run
 aih status                             # the run: loop, then a row per todo and why
 aih log                                # what happened
 aih pause "trunk needs a look"         # no new claims; queued work still merges
