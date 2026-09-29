@@ -6,6 +6,22 @@ git or `gh` command, run by hand, in order.
 See adr-2026-09-26-one-install-per-machine for why a release is a tagged
 tarball rather than a package.
 
+## First release
+
+Once, before the first tag: create the tap. `brew tap-new` scaffolds a local
+tap with a `Formula/` directory, a README and CI; that checkout becomes the
+`dannycastillo/homebrew-tap` repo.
+
+```sh
+brew tap-new dannycastillo/tap
+cd "$(brew --repository)/Library/Taps/dannycastillo/homebrew-tap"
+gh repo create dannycastillo/homebrew-tap --public --source . --push
+```
+
+`brew install dannycastillo/tap/ai-harness` works only once
+`dannycastillo/ai-harness` is public: the formula downloads from its Releases,
+and `brew audit` reports the homepage as a 404 until then.
+
 ## 1. Bump VERSION
 
 Through the harness, like any other change: a `chore` todo, a branch, a
