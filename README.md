@@ -103,7 +103,8 @@ Partly built. `aih help` lists what your copy has.
 ## Setup
 
 The tree is relocatable and installs once per machine; a repo holds only
-`.ai-harness.conf` and `todo/`. Two ways to install it:
+`.ai-harness.conf` and `todo/`. `aih version` and `aih help` work anywhere,
+inside a repository or not. Two ways to install it:
 
 ```sh
 brew install dannycastillo/tap/ai-harness

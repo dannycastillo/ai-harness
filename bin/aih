@@ -24,19 +24,6 @@ unset _src _dir
 for _lib in "$AI_HARNESS_HOME"/lib/*.sh; do . "$_lib"; done
 unset _lib
 
-AI_HARNESS_REPO=$(git rev-parse --show-toplevel 2>/dev/null) ||
-	die "$EX_FAIL" "not inside a git repository"
-readonly AI_HARNESS_REPO
-
-# Verbs read todo/*.md and the gate's paths relative to the repo root, so a
-# verb run from a subdirectory must still see the whole tree. A path a user
-# passes in — submit --body, for instance — is theirs and stays relative to
-# where they actually ran aih.
-AI_HARNESS_INVOKED_FROM=$(pwd -P)
-readonly AI_HARNESS_INVOKED_FROM
-export AI_HARNESS_INVOKED_FROM
-cd -- "$AI_HARNESS_REPO"
-
 verb=help
 if [ $# -gt 0 ]; then
 	verb=$1
@@ -49,30 +36,50 @@ esac
 verb_file="$AI_HARNESS_HOME/verbs/$verb.sh"
 [ -f "$verb_file" ] || die "$EX_USAGE" "unknown verb: $verb (try: aih help)"
 
-# init writes the config, so it is the one verb that must run without one.
-if [ "$verb" != init ]; then
-	if [ ! -f "$AI_HARNESS_REPO/.ai-harness.conf" ]; then
-		if _stc=$(ai_harness_sole_trunk_checkout); then
-			die "$EX_FAIL" "run this from the ${_stc%%	*} checkout: cd ${_stc#*	}"
+# help and version print from any directory, repository or not, so they
+# leave AI_HARNESS_REPO unset and load no config.
+case $verb in
+help | version) ;;
+*)
+	AI_HARNESS_REPO=$(git rev-parse --show-toplevel 2>/dev/null) ||
+		die "$EX_FAIL" "not inside a git repository"
+	readonly AI_HARNESS_REPO
+
+	# Verbs read todo/*.md and the gate's paths relative to the repo root, so a
+	# verb run from a subdirectory must still see the whole tree. A path a user
+	# passes in — submit --body, for instance — is theirs and stays relative to
+	# where they actually ran aih.
+	AI_HARNESS_INVOKED_FROM=$(pwd -P)
+	readonly AI_HARNESS_INVOKED_FROM
+	export AI_HARNESS_INVOKED_FROM
+	cd -- "$AI_HARNESS_REPO"
+
+	# init writes the config, so it is the one verb that must run without one.
+	if [ "$verb" != init ]; then
+		if [ ! -f "$AI_HARNESS_REPO/.ai-harness.conf" ]; then
+			if _stc=$(ai_harness_sole_trunk_checkout); then
+				die "$EX_FAIL" "run this from the ${_stc%%	*} checkout: cd ${_stc#*	}"
+			fi
+			die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
 		fi
-		die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
+		# shellcheck source=/dev/null  # per-project, by design
+		. "$AI_HARNESS_REPO/.ai-harness.conf"
+
+		: "${AI_HARNESS_PROJECT:?.ai-harness.conf must set AI_HARNESS_PROJECT}"
+		: "${AI_HARNESS_TRUNK:?.ai-harness.conf must set AI_HARNESS_TRUNK}"
+		: "${AI_HARNESS_WORKTREE_ROOT:?.ai-harness.conf must set AI_HARNESS_WORKTREE_ROOT}"
+
+		case $verb in
+		gate) ;;
+		doctor)
+			[ $# -eq 1 ] && [ "$1" = --print-state-dir ] ||
+				ai_harness_require_trunk_or_claim
+			;;
+		*) ai_harness_require_trunk_or_claim ;;
+		esac
 	fi
-	# shellcheck source=/dev/null  # per-project, by design
-	. "$AI_HARNESS_REPO/.ai-harness.conf"
-
-	: "${AI_HARNESS_PROJECT:?.ai-harness.conf must set AI_HARNESS_PROJECT}"
-	: "${AI_HARNESS_TRUNK:?.ai-harness.conf must set AI_HARNESS_TRUNK}"
-	: "${AI_HARNESS_WORKTREE_ROOT:?.ai-harness.conf must set AI_HARNESS_WORKTREE_ROOT}"
-
-	case $verb in
-	gate | help | version) ;;
-	doctor)
-		[ $# -eq 1 ] && [ "$1" = --print-state-dir ] ||
-			ai_harness_require_trunk_or_claim
-		;;
-	*) ai_harness_require_trunk_or_claim ;;
-	esac
-fi
+	;;
+esac
 
 AI_HARNESS_VERB=$verb
 export AI_HARNESS_VERB
