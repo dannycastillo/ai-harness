@@ -109,6 +109,9 @@ else
 	fi
 fi
 
+_inbox=$(ai_harness_todo_inbox_summary)
+[ -z "$_inbox" ] || printf 'inbox    %s; moved into todo/ to be planned\n' "$_inbox"
+
 if [ "$_total" -eq 0 ]; then
 	printf 'nothing in todo/. aih role protocol says how to file one.\n'
 	exit "$EX_OK"

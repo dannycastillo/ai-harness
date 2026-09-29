@@ -1,13 +1,23 @@
 # The todo graph: Blocked-by edges, Touches intersections, and the plan built
 # from them.
 
-# Blockers of a todo file that are still open, i.e. still present in todo/.
+# Blockers of a todo file that are still open: still present in todo/, or
+# filed but not promoted out of a subdirectory of it, which is open too.
 ai_harness_open_blockers() {
 	_ob=
 	for _b in $(ai_harness_todo_field "$1" "Blocked by" | tr ',' ' '); do
 		_b=${_b#todo/}
 		_b=${_b%.md}
-		[ -f "todo/$_b.md" ] && _ob="$_ob $_b"
+		if [ -f "todo/$_b.md" ]; then
+			_ob="$_ob $_b"
+		else
+			_nested=$(find todo -mindepth 2 -name "$_b.md" 2>/dev/null | head -1)
+			if [ -n "$_nested" ]; then
+				_ndir=${_nested#todo/}
+				_ndir=${_ndir%/*}
+				_ob="$_ob $_b, in todo/$_ndir/"
+			fi
+		fi
 	done
 	printf '%s\n' "${_ob# }"
 }
@@ -171,4 +181,24 @@ EOF
 	done <<EOF
 $_all
 EOF
+}
+
+# "N in todo/<dir>/" per subdirectory of todo/ that holds a filed-but-not-
+# promoted todo, comma-separated; empty when none does. A file whose Priority
+# or Touches doesn't validate is still counted, but flagged: it would show
+# invalid too once promoted.
+ai_harness_todo_inbox_summary() {
+	_tis=
+	for _d in todo/*/; do
+		[ -d "$_d" ] || continue
+		_tn=$(find "$_d" -name '*.md' 2>/dev/null | wc -l | tr -d ' ')
+		[ "$_tn" -gt 0 ] || continue
+		_tinv=$(find "$_d" -name '*.md' 2>/dev/null | while IFS= read -r _tf; do
+			ai_harness_todo_fields_ok "$_tf" >/dev/null 2>&1 || printf 'x\n'
+		done | wc -l | tr -d ' ')
+		_te="$_tn in ${_d}"
+		[ "$_tinv" -eq 0 ] || _te="$_te ($_tinv invalid)"
+		_tis="$_tis, $_te"
+	done
+	printf '%s\n' "${_tis#, }"
 }

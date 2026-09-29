@@ -60,6 +60,10 @@ when to stop.
 - a park reads `cleanup-refused`: the merge stands, but a worktree or branch
   refused to go.
 - you cannot run a needs-running box. Park it `needs-human`; do not pass it.
+- the only way to run it is to start it in the background and wait: don't.
+  A dispatched session is never woken by anything it started — if a check
+  is not done when you stop speaking, it is not done. Park it instead:
+  `aih integrate --continue --park needs-human --detail "<box>"`.
 
 `--park` takes only codes from the closed set, which it lists when given one it
 does not know. `unknown` is a code, and a stop.

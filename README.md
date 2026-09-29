@@ -101,8 +101,10 @@ checkout's copy over the installed one. Agents the loop starts do not need
 it: `run` puts the running copy's own `bin` first on their PATH.
 
 - A repo the harness has never seen: `aih init` detects the stack, writes
-  `.ai-harness.conf`, and creates `todo/`. It always prints the config first
-  and stops for a `y` unless given `--yes`.
+  `.ai-harness.conf`, and creates `todo/`, including its `todo/new/` inbox —
+  the only place an agent files a todo without a human moving it into the
+  backlog by hand. It always prints the config first and stops for a `y`
+  unless given `--yes`.
 - `doctor` checks the state dir, trunk, the worktree root, and every declared
   gate's tools. It changes nothing unless given `--repair`, which rebuilds
   claims from git.
@@ -246,6 +248,7 @@ AI_HARNESS_WORKTREE_ROOT="../wut-command-worktrees"   # relative to the main wor
 AI_HARNESS_PREFIXES="feat fix doc chore"
 AI_HARNESS_MAX_WORKERS=3
 AI_HARNESS_PROTECTED="AGENTS.md .github/workflows/*"
+AI_HARNESS_PUSH_TRUNK="yes"
 
 AI_HARNESS_GATES="build vet fmt test shellcheck shellsize"
 AI_HARNESS_QUICK_GATES="build vet"
@@ -264,6 +267,11 @@ AI_HARNESS_GATE_TOOLS_build="go"
 - `AI_HARNESS_PROTECTED` lists globs that park for a human even when a todo
   declares them. Unset, it is `AGENTS.md`; set it to add to that or to free
   a path.
+- `AI_HARNESS_PUSH_TRUNK="yes"` pushes the trunk to its upstream, fast-forward
+  only, after every green merge. Unset or `no`: the merge stays local and a
+  human pushes it. `aih init` sets it from whether the trunk already tracks a
+  remote. A rejected push warns and leaves the merge on trunk; `aih status`
+  and `aih doctor` show an ahead trunk either way.
 
 ## State
 

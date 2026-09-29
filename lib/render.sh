@@ -173,7 +173,7 @@ ai_harness_render_run() {
 		END { if (e) print e }' "$_st_ev" 2>/dev/null)
 
 	_st_rows=$(printf '%s\n' "$1" | ai_harness_render_rows "$(ai_harness_run_plan)")
-	_st_count=$(printf '%s\n' "$_st_rows" | grep -c .)
+	_st_count=$(printf '%s\n' "$_st_rows" | grep -c . || :)
 
 	_st_e0=$(ai_harness_render_epoch "$_st_t0")
 	printf 'run      %s (Total: %s)' "$(ai_harness_run_set_names)" "$_st_count"
@@ -207,9 +207,24 @@ ai_harness_render_run() {
 	else
 		printf '\nloop     no stop recorded\n'
 	fi
+	_st_ahead=$(ai_harness_render_trunk_ahead)
+	[ -z "$_st_ahead" ] || printf 'trunk    %s\n' "$_st_ahead"
 	ai_harness_render_paused
 	printf '\n'
 	printf '%s\n' "$_st_rows" | ai_harness_render_table
+}
+
+# "N ahead of <upstream>, ..." when the trunk has an upstream and leads it,
+# empty otherwise. Shared by status and doctor so the two say the same thing.
+ai_harness_render_trunk_ahead() {
+	_ta_up=$(git rev-parse -q --verify --abbrev-ref "$AI_HARNESS_TRUNK@{upstream}" 2>/dev/null) || return 0
+	_ta_n=$(git rev-list --count "$_ta_up..$AI_HARNESS_TRUNK")
+	[ "$_ta_n" -gt 0 ] || return 0
+	if [ "${AI_HARNESS_PUSH_TRUNK:-no}" = yes ]; then
+		printf '%s ahead of %s, aih integrate pushes it' "$_ta_n" "$_ta_up"
+	else
+		printf '%s ahead of %s, push it by hand' "$_ta_n" "$_ta_up"
+	fi
 }
 
 # The paused line, when a pause is set.
@@ -270,11 +285,16 @@ ai_harness_render_status() {
 		[ -z "$_st_rows" ] || printf '%s\n' "$_st_rows" | ai_harness_render_table
 	fi
 
-	# The run lock is the loop line's business while its holder is alive.
+	# The run lock is the loop line's business while its holder is alive, and
+	# while its holder is this process: a loop renders its own exit report
+	# before its EXIT trap releases the lock, and must not list itself.
 	for _st_l in "$(ai_harness_state_dir)"/lock/*; do
 		[ -d "$_st_l" ] || continue
 		_st_name=$(basename -- "$_st_l")
-		[ "$_st_name" != run ] || ! ai_harness_run_live_pid >/dev/null || continue
+		if [ "$_st_name" = run ]; then
+			ai_harness_run_live_pid >/dev/null && continue
+			[ "$(ai_harness_run_holder_pid)" != "$$" ] || continue
+		fi
 		printf '\nlock %s %s\n' "$_st_name" "$(ai_harness_lock_who "$_st_name")"
 		ai_harness_lock_is_stale "$_st_name" && printf '  ! stale: inspect, then aih unlock %s --force\n' "$_st_name"
 	done

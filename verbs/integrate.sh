@@ -125,4 +125,5 @@ rm -f "$_msg" "$_pending" "$(ai_harness_ig_file integrate/packet)"
 git rev-parse HEAD >"$_green"
 ai_harness_event "$_stem" - merged "$(git rev-parse --short HEAD)"
 printf 'merged %s as %s\n' "$_branch" "$(git rev-parse --short HEAD)"
+ai_harness_ig_push
 ai_harness_ig_cleanup "$_stem" "$_branch"
