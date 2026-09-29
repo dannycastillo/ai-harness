@@ -66,6 +66,10 @@ if [ "$verb" != init ]; then
 
 	case $verb in
 	gate | help | version) ;;
+	doctor)
+		[ $# -eq 1 ] && [ "$1" = --print-state-dir ] ||
+			ai_harness_require_trunk_or_claim
+		;;
 	*) ai_harness_require_trunk_or_claim ;;
 	esac
 fi
