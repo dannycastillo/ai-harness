@@ -128,7 +128,11 @@ else
 	_row "gate subsets" "quick: ${AI_HARNESS_QUICK_GATES:-none}   exclusive: ${AI_HARNESS_EXCLUSIVE_GATES:-none}"
 fi
 
-_row worktrees "$(git worktree list | wc -l | tr -d ' ') (including the main one)"
+if git worktree list --porcelain | sed -n '1,2p' | grep -qx bare; then
+	_row worktrees "$(git worktree list --porcelain | grep -c '^HEAD ')"
+else
+	_row worktrees "$(git worktree list | wc -l | tr -d ' ') (including the main one)"
+fi
 
 # Advisory: dispatched agents get this tree's bin on PATH regardless.
 if _l=$(command -v aih 2>/dev/null); then

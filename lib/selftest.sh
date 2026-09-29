@@ -24,6 +24,12 @@ ai_harness_selftest() {
 			printf '    %-11s %s\n' 'state dir' "root: $_here / linked: $_there"
 			_rc=1
 		fi
+		if ai_harness_state_worktree_claim "$_wt" selftest/no-such-todo >/dev/null; then
+			printf '    %-11s %s\n' 'claim rule' 'accepted a worktree whose branch has no todo'
+			_rc=1
+		else
+			printf '    %-11s %s\n' 'claim rule' 'rejects a worktree with no todo on trunk'
+		fi
 		git worktree remove --force "$_wt" >/dev/null 2>&1 || {
 			printf '    %-11s %s\n' cleanup "could not remove $_wt"
 			_rc=1
