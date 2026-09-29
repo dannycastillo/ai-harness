@@ -2,8 +2,8 @@
 #
 #   aih run [<todo-stem>...] [--all] [--detach] [--once]
 #
-# Stems given are remembered; a bare run reuses the last set, and --all clears
-# it. aih plan <stem>... previews the same set. --detach starts the loop under
+# Stems given are remembered; a bare run reuses the last set, and --all takes
+# the todos in todo/ now: work filed later waits for the next run. aih plan <stem>... previews the same set. --detach starts the loop under
 # nohup and prints its pid. --once runs a single tick. Exit: 0 every todo in
 # the set merged or is held with a reason, 1 a stop for a human, 3 paused and
 # drained.
@@ -37,9 +37,15 @@ _trunk_wt=$(ai_harness_trunk_worktree)
 
 mkdir -p "$(dirname -- "$(ai_harness_run_file set)")"
 if [ "$_all" = yes ]; then
-	: >"$(ai_harness_run_file set)"
+	for _f in todo/*.md; do
+		[ -f "$_f" ] || continue
+		[ "$(basename -- "$_f")" != README.md ] || continue
+		basename -- "$_f" .md
+	done >"$(ai_harness_run_file set)"
+	: >"$(ai_harness_run_file all)"
 elif [ -n "$_stems" ]; then
 	printf '%s' "$_stems" >"$(ai_harness_run_file set)"
+	rm -f "$(ai_harness_run_file all)"
 fi
 
 if [ "$_detach" = yes ]; then
@@ -56,9 +62,9 @@ fi
 
 ai_harness_lock_acquire run || die "$EX_FAIL" "run: a loop is already running — $(ai_harness_lock_who run)"
 trap 'ai_harness_lock_release run' EXIT
-_set=$(ai_harness_run_set | tr '\n' ' ')
-ai_harness_event @run - started "${_set:-every todo}"
-log "run: working ${_set:-every todo}"
+_set=$(ai_harness_run_set_names)
+ai_harness_event @run - started "$_set"
+log "run: working $_set"
 
 rm -f "$(ai_harness_run_file failed)".*
 _halt() {

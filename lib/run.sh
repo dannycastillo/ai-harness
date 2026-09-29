@@ -4,12 +4,25 @@
 
 ai_harness_run_file() { printf '%s/run/%s\n' "$(ai_harness_state_dir)" "$1"; }
 
-# The requested stems, one per line; an empty file means every todo. It is the
-# one thing a restart would otherwise lose, so it lives on disk.
+# The requested stems, one per line. It is the one thing a restart would
+# otherwise lose, so it lives on disk.
 ai_harness_run_set() { cat "$(ai_harness_run_file set)" 2>/dev/null || :; }
 
-# The set as a human reads it: the names on one line, or "every todo".
+# True when --all took the set: run/all marks it, so an empty todo/ at start
+# is an empty run and not "every todo, whenever it appears".
+ai_harness_run_is_all() { [ -f "$(ai_harness_run_file all)" ]; }
+
+# True when the set file is the run: it has stems, or --all took it while
+# todo/ was empty. A bare empty file is the older every-todo run.
+ai_harness_run_is_fixed() { [ -n "$(ai_harness_run_set)" ] || ai_harness_run_is_all; }
+
+# The set as a human reads it: "every todo" when --all took it, else the
+# names on one line.
 ai_harness_run_set_names() {
+	if ai_harness_run_is_all; then
+		printf 'every todo\n'
+		return 0
+	fi
 	_rn_s=$(ai_harness_run_set | tr '\n' ' ')
 	_rn_s=${_rn_s% }
 	printf '%s\n' "${_rn_s:-every todo}"
@@ -29,6 +42,7 @@ ai_harness_run_live_pid() {
 # The plan for the set alone: a todo nobody asked for must not hold one in it.
 ai_harness_run_plan() {
 	_rp_set=$(ai_harness_run_set)
+	[ -n "$_rp_set" ] || ! ai_harness_run_is_all || return 0
 	# shellcheck disable=SC2086  # a list of stems
 	ai_harness_plan $_rp_set
 }
