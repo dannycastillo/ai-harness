@@ -1,0 +1,11 @@
+.github export-ignore
+.gitattributes export-ignore
+.gitignore export-ignore
+.ai-harness.conf export-ignore
+AGENTS.md export-ignore
+RELEASING.md export-ignore
+docs export-ignore
+packaging export-ignore
+test export-ignore
+todo export-ignore
+install.sh export-ignore

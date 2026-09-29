@@ -32,6 +32,9 @@ git push origin vX.Y.Z
 
 ## 3. Archive the tag
 
+The archive omits the paths marked `export-ignore` in `.gitattributes`: only
+what the installed tree runs.
+
 ```sh
 git archive --format=tar.gz --prefix=ai-harness-X.Y.Z/ vX.Y.Z \
   -o ai-harness-X.Y.Z.tar.gz
