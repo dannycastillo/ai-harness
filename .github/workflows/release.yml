@@ -1,0 +1,31 @@
+# Publishes the GitHub Release for a vX.Y.Z tag: tarball plus its checksum.
+name: release
+
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build and publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [ "$(tr -d '[:space:]' < VERSION)" != "$version" ]; then
+            echo "VERSION says $(cat VERSION), tag says $version" >&2
+            exit 1
+          fi
+          tarball="ai-harness-$version.tar.gz"
+          git archive --format=tar.gz --prefix="ai-harness-$version/" \
+            "$GITHUB_REF_NAME" -o "$tarball"
+          sha256sum "$tarball" | awk '{print $1}' > "$tarball.sha256"
+          gh release create "$GITHUB_REF_NAME" "$tarball" "$tarball.sha256" \
+            --title "$GITHUB_REF_NAME" --generate-notes

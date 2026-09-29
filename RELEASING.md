@@ -30,38 +30,16 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-## 3. Archive the tag
+## 3. CI publishes the release
 
-The archive omits the paths marked `export-ignore` in `.gitattributes`: only
-what the installed tree runs.
+Pushing the tag in step 2 runs `.github/workflows/release.yml`. It fails if
+`VERSION` disagrees with the tag, then attaches `ai-harness-X.Y.Z.tar.gz` and
+`ai-harness-X.Y.Z.tar.gz.sha256` to a new release. The tarball omits the paths
+marked `export-ignore` in `.gitattributes`: only what the installed tree runs.
 
-```sh
-git archive --format=tar.gz --prefix=ai-harness-X.Y.Z/ vX.Y.Z \
-  -o ai-harness-X.Y.Z.tar.gz
-```
-
-## 4. Checksum the tarball
-
-`install.sh` fetches this file, named after the tarball, to verify what it
-downloaded.
-
-```sh
-shasum -a 256 ai-harness-X.Y.Z.tar.gz | awk '{print $1}' \
-  > ai-harness-X.Y.Z.tar.gz.sha256
-```
-
-## 5. Publish the release
-
-Both files, so `install.sh` finds the checksum next to the tarball.
-
-```sh
-gh release create vX.Y.Z ai-harness-X.Y.Z.tar.gz ai-harness-X.Y.Z.tar.gz.sha256 \
-  --title vX.Y.Z --notes '<what changed>'
-```
-
-## 6. Update the tap
+## 4. Update the tap
 
 `packaging/ai-harness.rb` in this repo is the formula, kept for review; a
 release copies it into `dannycastillo/homebrew-tap` as `Formula/ai-harness.rb`,
-with its `url` and `sha256` set to this tag's tarball and the checksum from
-step 4. Commit and push there — that repo has no `aih` of its own.
+with its `url` and `sha256` set to this tag's tarball and the contents of the
+release's `.sha256` asset. Commit and push there — that repo has no `aih` of its own.
