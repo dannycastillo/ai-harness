@@ -215,9 +215,13 @@ ai_harness_render_run() {
 }
 
 # "N ahead of <upstream>, ..." when the trunk has an upstream and leads it,
-# empty otherwise. Shared by status and doctor so the two say the same thing.
+# empty otherwise; with the push setting yes and no upstream, says integrate
+# cannot push. Shared by status and doctor so the two say the same thing.
 ai_harness_render_trunk_ahead() {
-	_ta_up=$(git rev-parse -q --verify --abbrev-ref "$AI_HARNESS_TRUNK@{upstream}" 2>/dev/null) || return 0
+	if ! _ta_up=$(git rev-parse -q --verify --abbrev-ref "$AI_HARNESS_TRUNK@{upstream}" 2>/dev/null); then
+		[ "${AI_HARNESS_PUSH_TRUNK:-no}" != yes ] || printf 'no upstream — integrate cannot push'
+		return 0
+	fi
 	_ta_n=$(git rev-list --count "$_ta_up..$AI_HARNESS_TRUNK")
 	[ "$_ta_n" -gt 0 ] || return 0
 	if [ "${AI_HARNESS_PUSH_TRUNK:-no}" = yes ]; then

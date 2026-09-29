@@ -119,6 +119,36 @@ next_trunk() {
 	[ "$_files" = .ai-harness.conf ] || { echo "second commit touches: $_files" && return 1; }
 }
 
+push_new_trunk() {
+	P=$S/d/proj
+	scratch "$P" || return 1
+	git init -q --bare "$S/d/remote.git" || return 1
+	git -C "$P" remote add origin "$S/d/remote.git" &&
+		git -C "$P" push -q -u origin main || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	sed -i.bak 's/^AI_HARNESS_PUSH_TRUNK=.*/AI_HARNESS_PUSH_TRUNK="yes"/' "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	_out=$(cd "$P" && "$AIH" init --new-trunk t --yes 2>&1) || { echo "init failed: $_out" && return 1; }
+	case $_out in *"init: pushed t to origin with -u"*) ;; *) echo "did not say it pushed: $_out" && return 1 ;; esac
+	[ "$(git -C "$P" rev-parse --abbrev-ref t@{upstream})" = origin/t ] || { echo "t has no upstream" && return 1; }
+	git -C "$S/d/remote.git" rev-parse -q --verify refs/heads/t >/dev/null || { echo "remote lacks t" && return 1; }
+
+	git -C "$P" branch -q --unset-upstream t
+	_out=$(cd "$S/d/ai-harness-worktrees/t" 2>/dev/null || cd "$S/d/proj-worktrees/t" && "$AIH" doctor 2>&1)
+	case $_out in *"no upstream — integrate cannot push"*) ;; *) echo "doctor silent: $_out" && return 1 ;; esac
+}
+
+push_no_remote() {
+	P=$S/e/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	sed -i.bak 's/^AI_HARNESS_PUSH_TRUNK=.*/AI_HARNESS_PUSH_TRUNK="yes"/' "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	_out=$(cd "$P" && "$AIH" init --new-trunk t --yes 2>&1) || { echo "init failed: $_out" && return 1; }
+	case $_out in *"init: not pushed"*"no remote"*) ;; *) echo "did not say why: $_out" && return 1 ;; esac
+	[ "$(git -C "$P/../proj-worktrees/t" log -1 --format=%s)" = 'chore: open trunk t' ] || { echo "not committed" && return 1; }
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -133,4 +163,6 @@ run() {
 run dated_trunk
 run trunk_here
 run next_trunk
+run push_new_trunk
+run push_no_remote
 exit "$_fail"
