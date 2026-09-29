@@ -1,7 +1,7 @@
 # ai-harness.rb — the Homebrew formula for `dannycastillo/tap/ai-harness`.
 #
 # Lives here for review; a human copies it into dannycastillo/homebrew-tap
-# per release, with the url and sha256 below updated (docs/releasing.md).
+# per release, with the url and sha256 below updated (RELEASING.md).
 class AiHarness < Formula
   desc "One todo, one branch, one worktree; trunk merged by one verb"
   homepage "https://github.com/dannycastillo/ai-harness"
@@ -15,14 +15,6 @@ class AiHarness < Formula
   end
 
   test do
-    # aih refuses to run outside a git repo with a .ai-harness.conf, even
-    # for `version`, so the test fakes the minimum of both.
-    system "git", "init", "-q"
-    (testpath/".ai-harness.conf").write <<~CONF
-      AI_HARNESS_PROJECT="test"
-      AI_HARNESS_TRUNK="main"
-      AI_HARNESS_WORKTREE_ROOT="../test-worktrees"
-    CONF
     assert_match version.to_s, shell_output("#{bin}/aih version")
   end
 end

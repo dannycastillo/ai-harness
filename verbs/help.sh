@@ -2,7 +2,7 @@
 #
 # The list is globbed rather than declared, so a new verb appears here for free.
 
-printf 'aih — AI Harness for %s\n\n' "$AI_HARNESS_PROJECT"
+printf 'aih — AI Harness%s\n\n' "${AI_HARNESS_PROJECT:+ for $AI_HARNESS_PROJECT}"
 printf 'verbs:\n'
 for _f in "$AI_HARNESS_HOME"/verbs/*.sh; do
 	_name=$(basename -- "$_f" .sh)
