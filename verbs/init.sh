@@ -292,6 +292,17 @@ if [ "$_mode" = new ]; then
 	[ "$_copy" = no ] || _subject="chore: open trunk $_trunk"
 	git -C "$_dest" commit -q -m "$_subject"
 	printf 'init: committed on %s as "%s"\n' "$_trunk" "$_subject"
+	if [ "$(sed -n 's/^AI_HARNESS_PUSH_TRUNK="\(.*\)"$/\1/p' "$_conf" | head -1)" = yes ]; then
+		_remote=$(git config "branch.${_here:-main}.remote" 2>/dev/null || git config branch.main.remote 2>/dev/null) || _remote=
+		[ -n "$_remote" ] || ! git remote | grep -qx origin || _remote=origin
+		if [ -z "$_remote" ]; then
+			printf 'init: not pushed — AI_HARNESS_PUSH_TRUNK is yes but this repo has no remote\n'
+		elif git -C "$_dest" push -q -u "$_remote" "$_trunk" 2>/dev/null; then
+			printf 'init: pushed %s to %s with -u\n' "$_trunk" "$_remote"
+		else
+			warn "init: push of $_trunk to $_remote was rejected — it stays local; push it once with -u"
+		fi
+	fi
 	printf 'init: done — trunk %s is at %s\n\n  cd %s\n  aih doctor\n' "$_trunk" "$_dest" "$_dest"
 else
 	printf 'init: done — commit these on %s, then aih doctor\n' "$_trunk"

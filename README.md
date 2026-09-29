@@ -321,8 +321,10 @@ scratch worktrees there are reported and left alone.
 - `AI_HARNESS_PUSH_TRUNK="yes"` pushes the trunk to its upstream, fast-forward
   only, after every green merge. Unset or `no`: the merge stays local and a
   human pushes it. `aih init` sets it from whether the trunk already tracks a
-  remote. A rejected push warns and leaves the merge on trunk; `aih status`
-  and `aih doctor` show an ahead trunk either way.
+  remote. Under `yes`, `aih init` pushes a new trunk with `-u` so it tracks
+  the remote from its first commit. A rejected push warns and leaves the merge
+  on trunk; `aih status` and `aih doctor` show an ahead trunk either way, and
+  a trunk with no upstream under `yes`.
 
 ## State
 

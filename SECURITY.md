@@ -2,10 +2,8 @@
 
 ## Reporting
 
-Report a vulnerability privately, not in a public issue.
-
-- On GitHub: the Security tab, then "Report a vulnerability".
-- Otherwise: danny.webgraphics@gmail.com.
+Report a vulnerability privately, not in a public issue: the Security tab
+on GitHub, then "Report a vulnerability".
 
 Include the version (`aih version`), what you did, and what happened.
 
