@@ -1,7 +1,7 @@
 # ai-harness.rb — the Homebrew formula for `dannycastillo/tap/ai-harness`.
 #
 # Lives here for review; a human copies it into dannycastillo/homebrew-tap
-# per release, with the url and sha256 below updated (docs/releasing.md).
+# per release, with the url and sha256 below updated (RELEASING.md).
 class AiHarness < Formula
   desc "One todo, one branch, one worktree; trunk merged by one verb"
   homepage "https://github.com/dannycastillo/ai-harness"
