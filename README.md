@@ -262,7 +262,8 @@ harness working, not failing.
 - Resolution: a human reads the diff and merges it by hand.
 
 Other hard stops, all by design: `.ai-harness.conf`, any other
-`AI_HARNESS_PROTECTED` path, a commit subject outside the four prefixes, a red
+`AI_HARNESS_PROTECTED` path, a todo added at the top level of `todo/`
+(`todo-added`; file it in `todo/new/`), a commit subject outside the four prefixes, a red
 trunk before the merge, a red gate after it, and a dirty trunk checkout. Nothing in that list names a path that is not a todo, the
 config, or `AI_HARNESS_PROTECTED`: the harness knows nothing about the
 project's own conventions.
