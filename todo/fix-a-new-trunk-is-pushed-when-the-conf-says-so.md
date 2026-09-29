@@ -1,7 +1,7 @@
 # fix: a new trunk is pushed when the conf says so
 
 - **Priority:** medium
-- **Touches:** verbs/init.sh, lib/integrate.sh, verbs/doctor.sh, test/first-run.sh, README.md
+- **Touches:** verbs/init.sh, lib/integrate.sh, lib/render.sh, verbs/doctor.sh, test/first-run.sh, README.md
 - **Blocked by:** —
 
 ## Goal
