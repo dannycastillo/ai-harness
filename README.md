@@ -104,7 +104,7 @@ Partly built. `aih help` lists what your copy has.
 ## Setup
 
 The tree is relocatable and installs once per machine; a repo holds only
-`.ai-harness.conf` and `todo/`. `aih version`, `aih help`, `aih protocol` and
+`.ai-harness.conf` and `todo/`. `aih version`, `aih help`, `aih protocol`, `aih role` and
 `aih <verb> --help` work anywhere, inside a repository or not. Two ways to install it:
 
 ```sh
