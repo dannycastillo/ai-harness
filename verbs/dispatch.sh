@@ -63,11 +63,13 @@ reviewer)
 	[ $# -eq 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line dispatch)"
 	if [ "$_print" = yes ]; then
 		_stem="<todo-stem>"
+		_wt=$AI_HARNESS_REPO
 	else
 		_p=$(ai_harness_ig_file integrate/pending)
 		[ "$(ai_harness_kv_get "$_p" phase || :)" = judge ] ||
 			die "$EX_FAIL" "dispatch: nothing awaits a verdict — integrate --next first"
 		ai_harness_require_trunk_checkout "dispatch reviewer"
+		_wt=$AI_HARNESS_REPO
 		_stem=$(ai_harness_kv_get "$_p" stem)
 	fi
 	_prompt="You are an AI Harness reviewer in this $AI_HARNESS_TRUNK checkout. aih integrate --next \
