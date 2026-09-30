@@ -94,8 +94,8 @@ the worktree root once it is empty. `aih init` opens the next trunk.
 
 Partly built. `aih help` lists what your copy has.
 
-- Every verb in the tables below is built, and all three role docs exist:
-  `aih role protocol`, `worker`, `reviewer`.
+- Every verb `aih help` lists is built. The rules are `aih protocol`, and
+  each role's sequence is `aih role worker` or `aih role reviewer`.
 - `AGENTS.md` names the two roles and no language. Trunk is written only by
   `integrate`, as a rule rather than a mechanism: a merge made by hand shows
   in `aih log` as `by hand`, since it carries no trailers.
@@ -104,8 +104,8 @@ Partly built. `aih help` lists what your copy has.
 ## Setup
 
 The tree is relocatable and installs once per machine; a repo holds only
-`.ai-harness.conf` and `todo/`. `aih version` and `aih help` work anywhere,
-inside a repository or not. Two ways to install it:
+`.ai-harness.conf` and `todo/`. `aih version`, `aih help`, `aih protocol` and
+`aih <verb> --help` work anywhere, inside a repository or not. Two ways to install it:
 
 ```sh
 brew install dannycastillo/tap/ai-harness
@@ -156,34 +156,14 @@ every write to shared state: no agent runs `git merge`.
 
 A human owns everything the two roles stop on: parks, stale locks, pauses.
 
-## Verbs, by owner
+## Where the verbs are documented
 
-`*` marks a verb that is not built yet.
+The tool documents itself, so the copy you have is the copy you read:
 
-| Owner      | Verb                        | Does                                                          |
-| ---------- | --------------------------- | ------------------------------------------------------------- |
-| worker     | `claim <todo>`              | cuts the branch and worktree from trunk; prints the path      |
-|            | `path <todo>`               | prints a claim's worktree, for `cd "$(aih path <todo>)"`  |
-|            | `gate --quick` / `--full`   | runs the declared checks, one line each                       |
-|            | `submit`                    | requires a clean tree and a green `gate --full`, then queues  |
-|            | `abandon <todo>`            | gives the claim back; refuses a dirty tree or a live agent unless `--force` |
-| reviewer   | `check`                     | read-only diff check: paths against `Touches`, hard stops     |
-|            | `integrate`                 | baseline gate, packet, merge, post-merge gate; or park        |
-| human      | `init [--yes] [--force]`    | writes `.ai-harness.conf` and `todo/` for a repo with neither  |
-|            | `status`                    | the run in progress or the last one, then every todo outside it |
-|            | `doctor [--repair]`         | asserts the setup; `--repair` rebuilds claims from git        |
-|            | `unlock <name> --force`     | releases a lock whose holder is dead                          |
-|            | `plan`, `dispatch`          | says what can run and why; claims one and starts an agent (`--print` shows the boot prompt without claiming) |
-|            | `log [<todo>]`              | events and merge trailers, one timeline                       |
-|            | `run [<todo>...]`           | works a set of todos unattended, until idle or a stop         |
-|            | `pause`, `resume`           | stops new claims; queued work still merges; lifts it          |
-|            | `stop [--agents]`           | kills the loop and every agent; claims and trees stay         |
-| anyone     | `help`                      | lists the verbs in this copy                                  |
-|            | `version`                   | prints the tree's `VERSION`                                    |
-|            | `role protocol\|worker\|reviewer` | prints that role doc from the tree                       |
-
-Exit codes: `0` ok, `1` failed, `2` usage, `3` paused, `4` the environment
-cannot run the gate, `10` judgment needed.
+- `aih help` lists the verbs of the installed copy.
+- `aih <verb> --help` says what one verb reads, writes and refuses, and where
+  it runs.
+- `aih protocol` prints the shared rules for branches, commits and todos.
 
 ## Running N workers
 
