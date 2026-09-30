@@ -15,10 +15,14 @@ prefix and its hyphen.
 ## Working in parallel
 
 Several agents work this backlog at once, one todo each, in separate
-worktrees, and trunk is written only by `aih integrate`. The mechanics and
-the verbs are in `README.md`; each role's sequence is in `roles/`. `aih run`
-works a set of todos unattended. The set is fixed when the run starts: work
-filed during a run waits for the next one.
+worktrees, and trunk is written only by `aih integrate`. `aih help` lists the
+verbs and `aih <verb> --help` documents each; each role's sequence is in
+`roles/`. `aih run` works a fixed set of todos unattended.
+
+A verb runs in one of three places: anywhere, the trunk checkout, or a claim's
+worktree. A worker's verbs run from its own worktree; the trunk checkout is
+the reviewer's and the loop's. `aih <verb> --help` says which, and is the
+per-verb truth.
 
 `Touches` in a todo is a reservation on paths, and it is the only thing that
 decides what runs side by side.
@@ -129,15 +133,10 @@ If you discover mid-task that you must touch a file the todo didn't list,
 **Done when** is the contract. Finish all of it; don't do more than it asks. If
 you spot adjacent work, file a todo for it rather than folding it in.
 
-Every box must be checkable from the worker's own worktree. `run`, `integrate`,
-and `dispatch reviewer` only run in the trunk checkout, so a box that depends
-on one of them can't be verified where the worker sits; `gate`, `check`,
-`plan`, and `status` run anywhere and are fair game, with one caveat: while a
-loop is running, a bare `plan` covers only the todos outside its set, so a box
-about the worker's own todo reads it from `status`. A box that can only be
-checked in the trunk checkout is a human's, and should say so: prefix it
-`human:`, or rewrite it as a static property of the diff that a worker can
-check directly.
+Every box must be checkable from the worker's own worktree; `aih <verb> --help`
+says where a verb runs. A box that needs the trunk checkout is a human's and
+says so: prefix it `human:`, or rewrite it as a static property of the diff
+that a worker can check directly.
 
 ### Picking one up
 
@@ -171,11 +170,22 @@ well enough to hand off.
 
 File it into `todo/new/`, not `todo/` directly: only `todo/` is the backlog,
 and nothing under `todo/new/` is claimed, planned, or run until a human moves
-it there by hand — `git mv todo/new/<file>.md todo/`. A branch that adds a
-file at the top level of `todo/` parks with `todo-added`; any subdirectory is
-free. Name the file with one
+it there by hand — `git mv todo/new/<file>.md todo/`. Name the file with one
 of the project's declared `AI_HARNESS_PREFIXES`; what each one means is that
-project's `AGENTS.md`, not this one. After filing, run `aih plan` and fix any
-row it marks `invalid`.
+project's `AGENTS.md`, not this one.
 
 Filing is not prioritizing. The maintainer decides what gets picked up.
+
+## Common tasks
+
+- Open a trunk: `aih init`
+- See the backlog and what would run: `aih plan`
+- See what is running or ran: `aih status`, `aih log`
+- File a todo: a file in `todo/new/`
+- Take one: `aih claim`
+- Work a set unattended: `aih run`
+- Hand off: `aih submit`
+- Judge: `aih integrate`
+- Retire a trunk: a pull request from the trunk to `main`, then
+  `git worktree remove` and `git branch -d`; there is no verb
+  (adr-2026-09-29-init-opens-a-dated-trunk-worktree)
