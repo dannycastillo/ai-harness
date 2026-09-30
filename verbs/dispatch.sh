@@ -54,8 +54,8 @@ worker)
 	_stem=$(basename -- "$_wt")
 	_prompt="You are an AI Harness worker in this worktree. Your todo is todo/$_stem.md. \
 Read AGENTS.md in full; if it has a section headed \`## ai-harness\`, those \
-instructions extend your role. Then run \`aih role protocol\` and \`aih role worker\` \
-and follow them, then your todo. aih gate --full must be green before you finish. \
+instructions extend your role. Then run \`aih role worker\` \
+and follow it, then your todo. aih gate --full must be green before you finish. \
 Do not merge and do not push: when Done when is satisfied, end with aih submit, \
 then report what you did and how each box is met."
 	;;
@@ -75,8 +75,8 @@ reviewer)
 	_prompt="You are an AI Harness reviewer in this $AI_HARNESS_TRUNK checkout. aih integrate --next \
 has stopped for your judgment on $_stem; the packet is at $(ai_harness_ig_file integrate/packet). \
 Read AGENTS.md in full; if it has a section headed \`## ai-harness\`, those \
-instructions extend your role. Then run \`aih role protocol\` and \`aih role reviewer\` \
-and follow them, then the packet. Verify every box as the packet says, then run \
+instructions extend your role. Then run \`aih role reviewer\` \
+and follow it, then the packet. Verify every box as the packet says, then run \
 exactly one aih integrate --continue command and stop: do not run integrate --next, \
 since the loop starts a new reviewer for the next packet."
 	;;

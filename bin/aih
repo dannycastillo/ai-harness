@@ -43,10 +43,10 @@ case ${1:-} in
 	;;
 esac
 
-# help and version print from any directory, repository or not, so they
+# help, version and protocol print from any directory, repository or not, so they
 # leave AI_HARNESS_REPO unset and load no config.
 case $verb in
-help | version) ;;
+help | version | protocol) ;;
 *)
 	AI_HARNESS_REPO=$(git rev-parse --show-toplevel 2>/dev/null) ||
 		die "$EX_FAIL" "not inside a git repository"
