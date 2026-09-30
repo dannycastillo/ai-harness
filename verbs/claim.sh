@@ -1,7 +1,17 @@
 # claim — take one todo, on its own branch, in its own worktree
 #
+# usage: aih claim <todo-stem> | --next [--agent <name>] [--dry-run]
+#
+# Cuts the todo's branch and a worktree from trunk and reserves its Touches.
+# --next takes the top runnable todo from aih plan. --dry-run says what it
+# would claim and writes nothing. Refuses a todo that is blocked, already
+# claimed, missing from trunk, or whose Touches meet an active claim, and
+# refuses past AI_HARNESS_MAX_WORKERS claims.
 # Stdout is the worktree path and nothing else, so this works:
 #   cd "$(aih claim fix-something)"
+#
+# Runs: the trunk checkout or a claim's worktree. Exit 3 when paused or
+# draining for a barrier.
 
 _stem=
 _agent=${AI_HARNESS_AGENT:-${USER:-worker}}

@@ -1,18 +1,18 @@
 # dispatch — claim a todo and start an agent in its worktree
 #
-#   aih dispatch worker [<todo-stem>] [--agent <name>] [--print] [--detach]
-#   aih dispatch reviewer [--print] [--detach]
+# usage: aih dispatch worker [<todo-stem>] [--agent <name>] [--print] [--detach] | reviewer [--print] [--detach]
 #
-# Attached, stdout is shell, so this leaves you where the agent runs:
-#   eval "$(aih dispatch worker)"
-# With AI_HARNESS_AGENT_CMD unset it prints the cd, and the boot prompt on stderr.
-# --detach starts the agent under nohup, records it in agents/, prints its pid.
-# --print prints the boot prompt and exits, claiming nothing and touching no
-# state — worker needs a named todo-stem in place of what claim would give it;
-# reviewer needs no pending packet in place of what --next would give it.
+# worker claims the named todo, or the top runnable one, then starts an agent
+# in its worktree. reviewer starts one on the packet integrate --next left.
+# Attached, stdout is shell, so eval "$(aih dispatch worker)" leaves you where
+# the agent runs; with AI_HARNESS_AGENT_CMD unset it prints the cd, and the
+# boot prompt on stderr. --detach starts the agent under nohup and prints its
+# pid. --print prints the boot prompt, claiming and writing nothing.
+#
+# Runs: the trunk checkout or a claim's worktree; reviewer only in the trunk
+# checkout. Exit 3 when paused.
 
-_usage="usage: aih dispatch worker [<todo-stem>] [--agent <name>] [--print] [--detach] | reviewer [--print] [--detach]"
-[ $# -gt 0 ] || die "$EX_USAGE" "$_usage"
+[ $# -gt 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line dispatch)"
 _role=$1
 shift
 _detach=no
@@ -38,7 +38,7 @@ worker)
 		_stem=${1:-}
 		[ -n "$_stem" ] || die "$EX_USAGE" "dispatch: worker --print needs a todo-stem"
 		shift
-		[ $# -eq 0 ] || die "$EX_USAGE" "$_usage"
+		[ $# -eq 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line dispatch)"
 		_stem=${_stem#todo/}
 		_stem=${_stem%.md}
 		ai_harness_todo_validate "$_stem" || die "$EX_FAIL" "dispatch: $_stem did not validate"
@@ -60,7 +60,7 @@ Do not merge and do not push: when Done when is satisfied, end with aih submit, 
 then report what you did and how each box is met."
 	;;
 reviewer)
-	[ $# -eq 0 ] || die "$EX_USAGE" "$_usage"
+	[ $# -eq 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line dispatch)"
 	if [ "$_print" = yes ]; then
 		_stem="<todo-stem>"
 	else
@@ -80,7 +80,7 @@ and follow them, then the packet. Verify every box as the packet says, then run 
 exactly one aih integrate --continue command and stop: do not run integrate --next, \
 since the loop starts a new reviewer for the next packet."
 	;;
-*) die "$EX_USAGE" "$_usage" ;;
+*) die "$EX_USAGE" "$(ai_harness_usage_line dispatch)" ;;
 esac
 
 [ "$_print" = no ] || { printf '%s\n' "$_prompt"; exit "$EX_OK"; }

@@ -1,6 +1,12 @@
 # stop — kill the loop and every agent it started; claims and trees stay
 #
-#   aih stop [--agents]      --agents leaves a running loop alone
+# usage: aih stop [--agents]
+#
+# Kills the run loop, then every live agent it recorded, and releases the run
+# lock. Claims, worktrees and branches are untouched. --agents leaves a
+# running loop alone.
+#
+# Runs: the trunk checkout or a claim's worktree.
 
 [ $# -le 1 ] || die "$EX_USAGE" 'usage: aih stop [--agents]'
 _loop=yes

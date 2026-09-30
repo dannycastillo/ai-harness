@@ -1,4 +1,11 @@
 # path — print a claim's worktree, for cd "$(aih path <todo>)"
+#
+# usage: aih path <todo-stem>
+#
+# Prints the worktree the claim recorded and nothing else. Fails when the
+# todo is not claimed or the recorded directory is gone (aih doctor --repair).
+#
+# Runs: the trunk checkout or a claim's worktree. Writes nothing.
 
 [ $# -eq 1 ] || die "$EX_USAGE" "usage: aih path <todo-stem>"
 _stem=${1#todo/}
