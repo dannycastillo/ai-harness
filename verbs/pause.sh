@@ -8,7 +8,7 @@
 #
 # Runs: the trunk checkout or a claim's worktree.
 
-[ $# -eq 1 ] && [ -n "$1" ] || die "$EX_USAGE" 'usage: aih pause "<reason>"'
+[ $# -eq 1 ] && [ -n "$1" ] || die "$EX_USAGE" "$(ai_harness_usage_line pause)"
 _f="$(ai_harness_state_dir)/PAUSED"
 mkdir -p "$(dirname -- "$_f")"
 printf '%s\n' "$1" >"$_f"

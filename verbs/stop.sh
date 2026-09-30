@@ -8,7 +8,7 @@
 #
 # Runs: the trunk checkout or a claim's worktree.
 
-[ $# -le 1 ] || die "$EX_USAGE" 'usage: aih stop [--agents]'
+[ $# -le 1 ] || die "$EX_USAGE" "$(ai_harness_usage_line stop)"
 _loop=yes
 [ "${1:-}" != --agents ] || _loop=no
 [ $# -eq 0 ] || [ "$_loop" = no ] || die "$EX_USAGE" "stop: unknown option: $1"

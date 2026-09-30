@@ -78,7 +78,7 @@ if [ "${1:-}" = --selftest ]; then
 	exit "$EX_OK"
 fi
 
-[ $# -le 1 ] || die "$EX_USAGE" "usage: aih check [<todo-stem>] | --selftest"
+[ $# -le 1 ] || die "$EX_USAGE" "$(ai_harness_usage_line check)"
 if [ $# -eq 1 ]; then
 	_stem=${1#todo/}
 	_stem=${_stem%.md}

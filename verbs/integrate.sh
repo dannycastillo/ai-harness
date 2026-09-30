@@ -36,7 +36,7 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-[ -n "$_mode" ] || die "$EX_USAGE" "usage: aih integrate --next [--wait] | --continue <verdict>"
+[ -n "$_mode" ] || die "$EX_USAGE" "$(ai_harness_usage_line integrate)"
 
 ai_harness_require_trunk_checkout "integrate"
 
