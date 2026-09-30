@@ -1,6 +1,15 @@
 # submit — hand a finished branch to the reviewer
 #
-#   aih submit [--body <file>|-] [--note "<observation>"]... [--escalate "<reason>"]
+# usage: aih submit [--body <file>|-] [--note "<observation>"]... [--escalate "<reason>"]
+#
+# Queues the branch for integrate --next. --body is the merge's summary
+# (default: the commit subjects); --note adds an AI-Harness-Notes trailer,
+# repeatable; --escalate parks the submission for a human instead of merging.
+# Refuses a dirty tree, a todo file still on the branch, no commits beyond
+# trunk, a body with a line starting ---, and a red gate --full. Never merges
+# and never pushes.
+#
+# Runs: in the claim's own worktree.
 
 _body=
 _esc=

@@ -1,5 +1,12 @@
 # unlock — release a lock a dead process left behind
 #
+# usage: aih unlock <name> --force
+#
+# Prints who holds the named lock; with --force, releases it. Without --force
+# it only says who holds it and exits 2.
+#
+# Runs: the trunk checkout or a claim's worktree.
+
 # Deliberately manual. Nothing in the harness steals a lock: a tool that
 # decides on its own that another process has died will eventually decide it
 # about a process that is still working.

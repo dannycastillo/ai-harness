@@ -1,6 +1,12 @@
 # pause — stop dispatching; what is queued still merges, what runs still runs
 #
-#   aih pause "<reason>"
+# usage: aih pause "<reason>"
+#
+# Writes the reason to the state directory's PAUSED file. claim, dispatch and
+# run then refuse new work with exit 3, and integrate keeps merging what is
+# already submitted. aih resume lifts it.
+#
+# Runs: the trunk checkout or a claim's worktree.
 
 [ $# -eq 1 ] && [ -n "$1" ] || die "$EX_USAGE" 'usage: aih pause "<reason>"'
 _f="$(ai_harness_state_dir)/PAUSED"

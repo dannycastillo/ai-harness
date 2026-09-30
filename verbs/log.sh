@@ -1,6 +1,12 @@
 # log — the history: events and merge trailers, one timeline
 #
-#   aih log [<todo-stem>]
+# usage: aih log [<todo-stem>]
+#
+# Reads the state directory's events and the merges on trunk, and prints them
+# in time order, one line each, with a merge's AI-Harness-* trailers under it.
+# A merge with no trailers is marked "by hand". A stem limits it to that todo.
+#
+# Runs: the trunk checkout or a claim's worktree. Writes nothing.
 
 [ $# -le 1 ] || die "$EX_USAGE" "usage: aih log [<todo-stem>]"
 _stem=${1:-}

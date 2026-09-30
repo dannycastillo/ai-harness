@@ -36,6 +36,13 @@ esac
 verb_file="$AI_HARNESS_HOME/verbs/$verb.sh"
 [ -f "$verb_file" ] || die "$EX_USAGE" "unknown verb: $verb (try: aih help)"
 
+case ${1:-} in
+-h | --help)
+	ai_harness_verb_help "$verb"
+	exit "$EX_OK"
+	;;
+esac
+
 # help and version print from any directory, repository or not, so they
 # leave AI_HARNESS_REPO unset and load no config.
 case $verb in

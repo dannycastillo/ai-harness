@@ -143,3 +143,13 @@ ai_harness_require_trunk_or_claim() {
 	fi
 	die "$EX_FAIL" "$AI_HARNESS_TRUNK is not checked out anywhere; check it out, or start a new trunk with aih init"
 }
+
+# A verb's documentation is the comment block that opens its file, printed
+# with the leading "# " stripped. The block ends at the first non-comment line.
+ai_harness_verb_help() {
+	awk '!/^#/ { exit } { sub(/^# ?/, ""); print }' "$AI_HARNESS_HOME/verbs/$1.sh"
+}
+
+ai_harness_usage_line() {
+	ai_harness_verb_help "$1" | sed -n '/^usage: /{p;q;}'
+}
