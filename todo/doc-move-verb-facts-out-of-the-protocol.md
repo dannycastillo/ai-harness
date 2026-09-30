@@ -45,6 +45,10 @@ its own facts, the ones that accumulated here can go there.
 - Add one paragraph under **Working in parallel** on the three places a
   verb runs: anywhere, the trunk checkout, or a claim's worktree, and
   that `--help` is the per-verb truth. Three sentences.
+- `verbs/init.sh`, the one-install comment below its header, still says
+  the protocol reaches agents through `aih role`; it is `aih protocol`
+  and `aih role` now. A worker fixed it on 2026-09-30 outside its
+  `Touches` and the change was dropped to clear the park; it is yours.
 - A sentence moved into a header edits `verbs/<verb>.sh`; that is why
   `verbs/*` is reserved. Change nothing but comments there.
 - The file was 181 lines on 2026-09-29. Net of the tasks section it
