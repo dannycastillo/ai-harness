@@ -4,7 +4,7 @@ Working agreements for this repo. Minimal on purpose — sections get added when
 we hit something actually worth writing down, not in anticipation.
 
 The rules the harness enforces — todos, `Touches`, working in parallel — are
-`aih role protocol`. This file holds what is this repo's, including how it
+`aih protocol`. This file holds what is this repo's, including how it
 names branches and writes commits.
 
 ## Git workflow
