@@ -14,8 +14,8 @@
 # Runs: in any git repository, with or without a config.
 
 # One install per machine: the tree is never copied into the repo, and the
-# protocol reaches agents through aih role, not through AGENTS.md
-# (adr-2026-09-26-one-install-per-machine,
+# protocol reaches agents through aih protocol and aih role, not through
+# AGENTS.md (adr-2026-09-26-one-install-per-machine,
 # adr-2026-09-26-the-protocol-ships-with-the-tree).
 
 _yes=no
