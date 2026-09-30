@@ -1,7 +1,16 @@
 # check — may this branch merge, mechanically? Read-only, no checkout
 #
-#   aih check [<todo-stem>]    defaults to the current branch's todo
-#   aih check --selftest       trips every code on purpose, in a throwaway repo
+# usage: aih check [<todo-stem> | --selftest]
+#
+# Compares the branch's diff against trunk with the todo's Touches (read from
+# trunk, not the claim) and prints one "<code> <detail>" line per finding, or
+# "clean". Stops on a protected path, a path outside Touches, a todo added or
+# left behind, or a commit subject without a declared prefix. It is what
+# integrate --next runs first. Defaults to the current branch's todo.
+# --selftest trips every code on purpose, in a throwaway repo.
+#
+# Runs: the trunk checkout or a claim's worktree. Exit 1 when the branch
+# may not merge.
 
 # A fresh branch off trunk that has already done its bookkeeping.
 _ckt_branch() {
@@ -69,7 +78,7 @@ if [ "${1:-}" = --selftest ]; then
 	exit "$EX_OK"
 fi
 
-[ $# -le 1 ] || die "$EX_USAGE" "usage: aih check [<todo-stem>] | --selftest"
+[ $# -le 1 ] || die "$EX_USAGE" "$(ai_harness_usage_line check)"
 if [ $# -eq 1 ]; then
 	_stem=${1#todo/}
 	_stem=${_stem%.md}

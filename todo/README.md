@@ -14,7 +14,7 @@ git mv todo/new/<file>.md todo/
 A project may keep other subdirectories of its own — `todo/backlog/` or
 whatever it likes — and the rule is the same for all of them.
 
-Run `aih role protocol` for the rules: filenames, `Touches`, `Blocked by`,
+Run `aih protocol` for the rules: filenames, `Touches`, `Blocked by`,
 and how a todo is picked up and cleared. This file is only the shape and one
 example; `aih plan` ignores it.
 

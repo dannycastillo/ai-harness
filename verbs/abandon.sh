@@ -1,4 +1,14 @@
 # abandon — give a claim back, freeing its todo and its paths
+#
+# usage: aih abandon <todo-stem> [--keep-branch] [--force]
+#
+# Removes the claim, its worktree and its branch, so the todo is offered again
+# and its Touches are free. Refuses while the worktree has uncommitted work,
+# the branch has unmerged commits, an agent is alive in it, or the branch
+# is submitted and waiting for integrate; --force overrides each (it kills the
+# agent and withdraws the submission). --keep-branch leaves the branch.
+#
+# Runs: the trunk checkout or a claim's worktree.
 
 _stem=
 _keep=no
@@ -12,7 +22,7 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-[ -n "$_stem" ] || die "$EX_USAGE" "usage: aih abandon <todo-stem> [--keep-branch] [--force]"
+[ -n "$_stem" ] || die "$EX_USAGE" "$(ai_harness_usage_line abandon)"
 _stem=${_stem#todo/}
 _stem=${_stem%.md}
 

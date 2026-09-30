@@ -1,5 +1,15 @@
 # doctor — check the harness's assumptions before anything is able to mutate
 #
+# usage: aih doctor [--repair] [--selftest]
+#
+# Prints one row each for the project, version, state directory, trunk,
+# worktree root, gates, gate subsets, worktrees and launcher, and exits 1 if
+# any is wrong. --repair first rebuilds the claim records from git worktree
+# list. --selftest also runs the harness's own tests against HEAD.
+# --print-state-dir prints the coordination directory and nothing else.
+#
+# Runs: anywhere in a configured repository.
+
 # Assertions only. What the harness can do and how to invoke it is aih help.
 
 _selftest=no

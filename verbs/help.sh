@@ -1,5 +1,12 @@
 # help — list the verbs and how to invoke them
 #
+# usage: aih help
+#
+# Prints every verb with its one line, and the exit codes.
+# aih <verb> --help prints one verb's documentation.
+#
+# Runs: anywhere, repository or not.
+
 # The list is globbed rather than declared, so a new verb appears here for free.
 
 printf 'aih — AI Harness%s\n\n' "${AI_HARNESS_PROJECT:+ for $AI_HARNESS_PROJECT}"
@@ -18,4 +25,10 @@ PATH.
 
 exit codes: 0 ok, 1 failed, 2 usage, 3 paused, 4 the environment cannot run
 the gate, 10 judgment needed
+
+aih <verb> --help says what one verb reads, writes and refuses, and where it
+runs.
+
+aih protocol is the shared rules, todos, Touches, branches and roles; read it
+before running anything.
 TXT

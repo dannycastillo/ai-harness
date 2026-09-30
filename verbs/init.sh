@@ -1,18 +1,22 @@
 # init — configure a repo the harness has never seen
 #
-#   aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]
+# usage: aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]
 #
 # Detects the stack (go.mod, package.json, Cargo.toml, pyproject.toml,
 # Makefile, in that order), prints the .ai-harness.conf it would write, and
 # stops for a y unless given --yes or run from a terminal. Writes the config,
 # todo/README.md, and the adapters whose dot directory already exists.
-# Never copies the tree and never edits AGENTS.md (adr-2026-09-26-one-install-
-# per-machine, adr-2026-09-26-the-protocol-ships-with-the-tree).
-#
-# The trunk is either a new branch in its own worktree, ai-harness-YYYYMMDD,
+# Never copies the tree or edits AGENTS.md. The trunk is either a new branch in its own worktree, ai-harness-YYYYMMDD,
 # where init commits what it wrote (the default), or the branch checked out
 # here (--trunk), where it commits nothing and refuses to overwrite an
 # existing .ai-harness.conf without --force.
+#
+# Runs: in any git repository, with or without a config.
+
+# One install per machine: the tree is never copied into the repo, and the
+# protocol reaches agents through aih protocol and aih role, not through
+# AGENTS.md (adr-2026-09-26-one-install-per-machine,
+# adr-2026-09-26-the-protocol-ships-with-the-tree).
 
 _yes=no
 _force=no
@@ -36,7 +40,7 @@ while [ $# -gt 0 ]; do
 		*) _newname=$2 && shift ;;
 		esac
 		;;
-	*) die "$EX_USAGE" "usage: aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]" ;;
+	*) die "$EX_USAGE" "$(ai_harness_usage_line init)" ;;
 	esac
 	shift
 done

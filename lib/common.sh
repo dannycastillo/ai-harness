@@ -109,24 +109,64 @@ ai_harness_is_claim_worktree() {
 	return 1
 }
 
-# The one checkout whose config names its own branch as trunk, printed as
-# "<branch><TAB><path>". Claim worktrees carry the same config on other
-# branches, so they do not count. Fails on none or several.
-ai_harness_sole_trunk_checkout() {
-	_stc=$(git worktree list --porcelain | awk '
+# Every checkout whose config names its own branch as trunk, one
+# "<branch><TAB><path>" per line. Claim worktrees carry the same config on
+# other branches, so they do not count.
+ai_harness_trunk_checkouts() {
+	git worktree list --porcelain | awk '
 		/^worktree / { p = substr($0, 10) }
 		/^branch refs\/heads\// { print p "\t" substr($0, 19) }
-	' | while IFS='	' read -r _stc_p _stc_b; do
-		_stc_t=$(sed -n 's/^AI_HARNESS_TRUNK="\(.*\)"$/\1/p' "$_stc_p/.ai-harness.conf" 2>/dev/null | head -1)
-		if [ "$_stc_t" = "$_stc_b" ]; then
-			printf '%s\t%s\n' "$_stc_b" "$_stc_p"
+	' | while IFS='	' read -r _tc_p _tc_b; do
+		_tc_t=$(sed -n 's/^AI_HARNESS_TRUNK="\(.*\)"$/\1/p' "$_tc_p/.ai-harness.conf" 2>/dev/null | head -1)
+		if [ "$_tc_t" = "$_tc_b" ]; then
+			printf '%s\t%s\n' "$_tc_b" "$_tc_p"
 		fi
-	done)
+	done
+}
+
+# The one trunk checkout, or failure on none or several.
+ai_harness_sole_trunk_checkout() {
+	_stc=$(ai_harness_trunk_checkouts)
 	case $_stc in
 	'' | *'
 '*) return 1 ;;
 	esac
 	printf '%s\n' "$_stc"
+}
+
+# Dies naming the branch we are on and every active trunk, with a command that
+# reruns the verb there. The conf a branch carries can name a trunk that is
+# gone, so this asks the worktrees, not the conf.
+ai_harness_die_no_active_trunk() {
+	_dnt_v=${1:-$verb}
+	_dnt_b=$(git symbolic-ref --short -q HEAD || git rev-parse --short HEAD)
+	_dnt_all=$(ai_harness_trunk_checkouts)
+	_dnt_nl='
+'
+	_dnt_m="this branch ($_dnt_b) does not have an active aih trunk."
+	case $_dnt_all in
+	'') die "$EX_FAIL" "$_dnt_m${_dnt_nl}No active aih trunk on this machine; run aih init to create one." ;;
+	*"$_dnt_nl"*)
+		_dnt_m="$_dnt_m${_dnt_nl}Active aih trunks found:"
+		while IFS='	' read -r _dnt_tb _dnt_tp; do
+			_dnt_m="$_dnt_m${_dnt_nl}  $_dnt_tb: cd $_dnt_tp && aih $_dnt_v"
+		done <<TRUNKS
+$_dnt_all
+TRUNKS
+		die "$EX_FAIL" "$_dnt_m"
+		;;
+	esac
+	_dnt_tp=${_dnt_all#*	}
+	die "$EX_FAIL" "$_dnt_m${_dnt_nl}Active aih trunk found at $_dnt_tp:${_dnt_nl}  cd $_dnt_tp && aih $_dnt_v"
+}
+
+# For the verbs that only the trunk checkout may run, after the shared guard
+# has let a claim worktree through.
+ai_harness_require_trunk_checkout() {
+	_rtc=$(ai_harness_trunk_worktree)
+	[ "$AI_HARNESS_REPO" != "$_rtc" ] || return 0
+	[ -z "$_rtc" ] || die "$EX_FAIL" "run it from the $AI_HARNESS_TRUNK checkout: cd $_rtc && aih $1"
+	ai_harness_die_no_active_trunk "$1"
 }
 
 # Verbs read the tree they run in, so they run from the trunk checkout or a
@@ -141,5 +181,15 @@ ai_harness_require_trunk_or_claim() {
 	if [ -n "$_tw" ]; then
 		die "$EX_FAIL" "run this from the $AI_HARNESS_TRUNK checkout: cd $_tw"
 	fi
-	die "$EX_FAIL" "$AI_HARNESS_TRUNK is not checked out anywhere; check it out, or start a new trunk with aih init"
+	ai_harness_die_no_active_trunk
+}
+
+# A verb's documentation is the comment block that opens its file, printed
+# with the leading "# " stripped. The block ends at the first non-comment line.
+ai_harness_verb_help() {
+	awk '!/^#/ { exit } { sub(/^# ?/, ""); print }' "$AI_HARNESS_HOME/verbs/$1.sh"
+}
+
+ai_harness_usage_line() {
+	ai_harness_verb_help "$1" | sed -n '/^usage: /{p;q;}'
 }

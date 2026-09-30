@@ -1,12 +1,17 @@
 # run — work a set of todos unattended: dispatch, judge, merge, until idle
 #
-#   aih run [<todo-stem>...] [--all] [--detach] [--once]
+# usage: aih run [<todo-stem>...] [--all] [--detach] [--once]
 #
+# A shell loop, not an agent. Each tick it reaps exited agents, kills any past
+# AI_HARNESS_AGENT_TIMEOUT, dispatches workers up to AI_HARNESS_MAX_WORKERS
+# from aih plan, and moves the queue a step: integrate --next, then a reviewer.
 # Stems given are remembered; a bare run reuses the last set, and --all takes
-# the todos in todo/ now: work filed later waits for the next run. aih plan <stem>... previews the same set. --detach starts the loop under
-# nohup and prints its pid. --once runs a single tick. Exit: 0 every todo in
-# the set merged or is held with a reason, 1 a stop for a human, 3 paused and
-# drained.
+# the todos in todo/ now: work filed later waits for the next run. aih plan
+# <stem>... previews the same set. --detach starts the loop under nohup and
+# prints its pid. --once runs a single tick. Needs AI_HARNESS_AGENT_CMD.
+#
+# Runs: the trunk checkout only. Exit 0 every todo merged or held with a
+# reason, 1 a stop for a human, 3 paused and drained.
 
 _detach=no
 _once=no
@@ -29,9 +34,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-_trunk_wt=$(ai_harness_trunk_worktree)
-[ "$AI_HARNESS_REPO" = "$_trunk_wt" ] ||
-	die "$EX_USAGE" "run: run it from the $AI_HARNESS_TRUNK checkout (${_trunk_wt:-none exists})"
+ai_harness_require_trunk_checkout "run"
 [ -n "${AI_HARNESS_AGENT_CMD:-}" ] || die "$EX_USAGE" "run: AI_HARNESS_AGENT_CMD is unset in .ai-harness.conf"
 ! ai_harness_lock_held run || die "$EX_FAIL" "run: a loop is already running — $(ai_harness_lock_who run)"
 

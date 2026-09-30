@@ -1,4 +1,14 @@
 # gate — run the project's declared checks, one result line each
+#
+# usage: aih gate [--quick | --full]
+#
+# Runs AI_HARNESS_GATES (--full, the default) or AI_HARNESS_QUICK_GATES, in
+# order, from the checkout it is run in. Stops at the first failure and prints
+# its output. Checks that every declared gate can run before running any.
+# submit and integrate run --full.
+#
+# Runs: anywhere in a configured repository. Exit 4 when the environment
+# cannot run the gates, as distinct from a gate failing.
 
 _list=$AI_HARNESS_GATES
 _label=full

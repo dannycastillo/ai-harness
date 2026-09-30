@@ -1,7 +1,16 @@
 # integrate — merge the oldest submission, stopping once for a verdict
 #
-#   aih integrate --next [--wait]         mechanics, then a judgment packet, exit 10
-#   aih integrate --continue --verdict pass | --reject "<box>" | --park <code> --detail "<what>"
+# usage: aih integrate --next [--wait] | --continue --verdict pass | --reject "<box>" | --park <code> --detail "<what>"
+#
+# --next takes the oldest submission, runs check and the baseline gate on
+# trunk, and prints a judgment packet; exit 10 means a verdict is awaited.
+# --wait polls for a submission instead of returning. --continue takes the
+# verdict: pass merges with --no-ff, runs the gate on the merge, commits with
+# the AI-Harness-* trailers, pushes trunk when AI_HARNESS_PUSH_TRUNK is yes,
+# and removes the worktree, branch and claim; --reject and --park leave the
+# branch and record why. Nothing is merged on a red gate or a moved trunk.
+#
+# Runs: the trunk checkout only. Exit 10 when a verdict is awaited.
 
 _mode=
 _wait=no
@@ -27,11 +36,9 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-[ -n "$_mode" ] || die "$EX_USAGE" "usage: aih integrate --next [--wait] | --continue <verdict>"
+[ -n "$_mode" ] || die "$EX_USAGE" "$(ai_harness_usage_line integrate)"
 
-_trunk_wt=$(ai_harness_trunk_worktree)
-[ "$AI_HARNESS_REPO" = "$_trunk_wt" ] ||
-	die "$EX_USAGE" "integrate: run it from the $AI_HARNESS_TRUNK checkout (${_trunk_wt:-none exists})"
+ai_harness_require_trunk_checkout "integrate"
 
 _pending=$(ai_harness_ig_file integrate/pending)
 _green=$(ai_harness_ig_file integrate/green)

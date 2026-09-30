@@ -1,16 +1,22 @@
 # plan — what the next run would dispatch, and why the rest waits
 #
-#   aih plan [<todo-stem>...]
+# usage: aih plan [<todo-stem>...]
 #
-# Stems given are the set aih run <stem>... would work, so this is its
-# preview. While a loop holds the run lock a bare plan covers only the todos
-# outside its set, since those are what the next run could take; claims are
-# then left to aih status. Rendering only: the schedule is ai_harness_plan,
-# which run, claim and status read directly, and nothing here changes it.
+# Prints each todo as runnable, held (with the reason: blocked, Touches
+# meeting another todo or claim, invalid) or claimed. Stems given are the set
+# aih run <stem>... would work, so this is its preview. While a loop holds the
+# run lock a bare plan covers only the todos outside its set, since those are
+# what the next run could take; claims are then left to aih status.
+# Read-only.
+#
+# Runs: the trunk checkout or a claim's worktree.
+
+# Rendering only: the schedule is ai_harness_plan, which run, claim and
+# status read directly, and nothing here changes it.
 
 _stems=
 for _a in "$@"; do
-	case $_a in -*) die "$EX_USAGE" "usage: aih plan [<todo-stem>...]" ;; esac
+	case $_a in -*) die "$EX_USAGE" "$(ai_harness_usage_line plan)" ;; esac
 	_s=${_a#todo/}
 	_s=${_s%.md}
 	[ -f "$(ai_harness_todo_file "$_s")" ] || die "$EX_USAGE" "plan: no such todo: $_s"
@@ -113,7 +119,7 @@ _inbox=$(ai_harness_todo_inbox_summary)
 [ -z "$_inbox" ] || printf 'inbox    %s; moved into todo/ to be planned\n' "$_inbox"
 
 if [ "$_total" -eq 0 ]; then
-	printf 'nothing in todo/. aih role protocol says how to file one.\n'
+	printf 'nothing in todo/. aih protocol says how to file one.\n'
 	exit "$EX_OK"
 fi
 printf '\n'
