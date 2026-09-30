@@ -34,9 +34,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-_trunk_wt=$(ai_harness_trunk_worktree)
-[ "$AI_HARNESS_REPO" = "$_trunk_wt" ] ||
-	die "$EX_USAGE" "run: run it from the $AI_HARNESS_TRUNK checkout (${_trunk_wt:-none exists})"
+ai_harness_require_trunk_checkout "run"
 [ -n "${AI_HARNESS_AGENT_CMD:-}" ] || die "$EX_USAGE" "run: AI_HARNESS_AGENT_CMD is unset in .ai-harness.conf"
 ! ai_harness_lock_held run || die "$EX_FAIL" "run: a loop is already running — $(ai_harness_lock_who run)"
 

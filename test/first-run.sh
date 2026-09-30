@@ -53,9 +53,11 @@ dated_trunk() {
 	runs "$W" doctor || return 1
 
 	# before the merge, main has no config
-	says "$P" "run this from the $TRUNK checkout: cd $W" status || return 1
+	says "$P" "this branch (main) does not have an active aih trunk." status || return 1
+	says "$P" "cd $W && aih status" status || return 1
 	git -C "$P" worktree add -q --detach "$S/a/scratch" main || return 1
-	says "$S/a/scratch" "run this from the $TRUNK checkout: cd $W" status || return 1
+	says "$S/a/scratch" "this branch ($(git -C "$S/a/scratch" rev-parse --short HEAD)) does not have an active aih trunk." status || return 1
+	says "$S/a/scratch" "cd $W && aih status" status || return 1
 
 	mkdir -p "$W/todo"
 	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$W/todo/feat-t.md"
@@ -63,12 +65,11 @@ dated_trunk() {
 	C=$(cd "$W" && "$AIH" claim feat-t) || { echo "claim failed" && return 1; }
 	runs "$C" status || return 1
 	runs "$W" status || return 1
-	for _v in "run --all" "integrate --next"; do
-		# shellcheck disable=SC2086  # the verb and its flag are two words
-		says "$C" "$TRUNK" $_v || return 1
-	done
-
-	says "$C" "aih:" dispatch reviewer || return 1
+	says "$C" "run it from the $TRUNK checkout: cd $W && aih run" run --all || return 1
+	says "$C" "run it from the $TRUNK checkout: cd $W && aih integrate" integrate --next || return 1
+	_pending=$P/.git/ai-harness/integrate/pending
+	mkdir -p "$(dirname -- "$_pending")" && printf 'phase=judge\nstem=feat-t\n' >"$_pending" || return 1
+	says "$C" "run it from the $TRUNK checkout: cd $W && aih dispatch reviewer" dispatch reviewer || return 1
 
 	# after the merge, main holds the config and names the trunk
 	git -C "$P" merge -q --no-ff -m 'Merge trunk' "$TRUNK" || return 1
@@ -79,9 +80,42 @@ dated_trunk() {
 	runs "$W" status || return 1
 
 	git -C "$P" worktree remove --force "$W" || return 1
-	says "$P" "$TRUNK is not checked out anywhere" status || return 1
-	says "$S/a/scratch" "$TRUNK is not checked out anywhere" status || return 1
+	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
+	says "$S/a/scratch" "No active aih trunk on this machine; run aih init" status || return 1
+	says "$C" "No active aih trunk on this machine; run aih init" run --all || return 1
+	says "$C" "No active aih trunk on this machine; run aih init" integrate --next || return 1
+	says "$C" "No active aih trunk on this machine; run aih init" dispatch reviewer || return 1
 	runs "$C" status
+}
+
+# main's conf names a trunk that was retired; the trunks that are open are
+# listed instead
+stale_conf() {
+	P=$S/f/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	sed -i.bak 's/^AI_HARNESS_TRUNK=.*/AI_HARNESS_TRUNK="gone"/' "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
+	git -C "$P" commit -qam 'chore: name a retired trunk' || return 1
+	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
+
+	(cd "$P" && "$AIH" init --new-trunk t-one --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	W1=$S/f/proj-worktrees/t-one
+	[ -d "$W1" ] || W1=$S/f/ai-harness-worktrees/t-one
+	_out=$(cd "$P" && "$AIH" status 2>&1)
+	[ $? -ne 0 ] || { echo "status succeeded on stale conf" && return 1; }
+	case $_out in
+	*"this branch (main) does not have an active aih trunk."*"Active aih trunk found at $W1:"*"cd $W1 && aih status"*) ;;
+	*) printf 'one trunk, got:\n  %s\n' "$_out" && return 1 ;;
+	esac
+
+	(cd "$P" && "$AIH" init --new-trunk t-two --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	W2=$(dirname -- "$W1")/t-two
+	_out=$(cd "$P" && "$AIH" status 2>&1)
+	case $_out in
+	*"Active aih trunks found:"*"t-one: cd $W1 && aih status"*"t-two: cd $W2 && aih status"*) ;;
+	*) printf 'two trunks, got:\n  %s\n' "$_out" && return 1 ;;
+	esac
 }
 
 trunk_here() {
@@ -163,6 +197,7 @@ run() {
 run dated_trunk
 run trunk_here
 run next_trunk
+run stale_conf
 run push_new_trunk
 run push_no_remote
 exit "$_fail"

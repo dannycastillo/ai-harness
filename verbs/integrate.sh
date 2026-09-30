@@ -38,9 +38,7 @@ while [ $# -gt 0 ]; do
 done
 [ -n "$_mode" ] || die "$EX_USAGE" "usage: aih integrate --next [--wait] | --continue <verdict>"
 
-_trunk_wt=$(ai_harness_trunk_worktree)
-[ "$AI_HARNESS_REPO" = "$_trunk_wt" ] ||
-	die "$EX_USAGE" "integrate: run it from the $AI_HARNESS_TRUNK checkout (${_trunk_wt:-none exists})"
+ai_harness_require_trunk_checkout "integrate"
 
 _pending=$(ai_harness_ig_file integrate/pending)
 _green=$(ai_harness_ig_file integrate/green)
