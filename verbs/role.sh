@@ -5,7 +5,7 @@
 # Prints roles/protocol.md, a blank line, then roles/<role>.md from the
 # installed tree. Boot prompts and adapters say aih role, never a path.
 #
-# Runs: the trunk checkout or a claim's worktree. Writes nothing.
+# Runs: anywhere, repository or not. Writes nothing.
 
 [ $# -eq 1 ] || die "$EX_USAGE" "$(ai_harness_usage_line role)"
 
