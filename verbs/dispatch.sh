@@ -67,9 +67,7 @@ reviewer)
 		_p=$(ai_harness_ig_file integrate/pending)
 		[ "$(ai_harness_kv_get "$_p" phase || :)" = judge ] ||
 			die "$EX_FAIL" "dispatch: nothing awaits a verdict — integrate --next first"
-		_wt=$(ai_harness_trunk_worktree)
-		[ "$AI_HARNESS_REPO" = "$_wt" ] ||
-			die "$EX_USAGE" "dispatch: run it from the $AI_HARNESS_TRUNK checkout (${_wt:-none exists})"
+		ai_harness_require_trunk_checkout "dispatch reviewer"
 		_stem=$(ai_harness_kv_get "$_p" stem)
 	fi
 	_prompt="You are an AI Harness reviewer in this $AI_HARNESS_TRUNK checkout. aih integrate --next \

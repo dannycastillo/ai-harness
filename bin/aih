@@ -64,10 +64,7 @@ help | version | protocol) ;;
 	# init writes the config, so it is the one verb that must run without one.
 	if [ "$verb" != init ]; then
 		if [ ! -f "$AI_HARNESS_REPO/.ai-harness.conf" ]; then
-			if _stc=$(ai_harness_sole_trunk_checkout); then
-				die "$EX_FAIL" "run this from the ${_stc%%	*} checkout: cd ${_stc#*	}"
-			fi
-			die "$EX_FAIL" "no .ai-harness.conf in $AI_HARNESS_REPO — see README.md's Setup section"
+			ai_harness_die_no_active_trunk
 		fi
 		# shellcheck source=/dev/null  # per-project, by design
 		. "$AI_HARNESS_REPO/.ai-harness.conf"
