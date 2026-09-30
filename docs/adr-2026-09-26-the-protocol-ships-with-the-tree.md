@@ -2,6 +2,7 @@
 
 - **Status:** Accepted
 - **Date:** 2026-09-26
+- **Superseded by:** adr-2026-09-29-help-lives-in-the-verb (the verb-naming line only)
 
 ## Context
 - A dispatched agent is told to read `AGENTS.md`, then a role doc, then its
