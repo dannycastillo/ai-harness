@@ -22,7 +22,7 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-[ -n "$_stem" ] || die "$EX_USAGE" "usage: aih abandon <todo-stem> [--keep-branch] [--force]"
+[ -n "$_stem" ] || die "$EX_USAGE" "$(ai_harness_usage_line abandon)"
 _stem=${_stem#todo/}
 _stem=${_stem%.md}
 

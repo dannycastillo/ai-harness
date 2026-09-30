@@ -35,7 +35,7 @@ while [ $# -gt 0 ]; do
 done
 case $_stem$_next in
 ?*no | yes) ;;
-*) die "$EX_USAGE" "usage: aih claim <todo-stem> | --next [--agent <name>] [--dry-run]" ;;
+*) die "$EX_USAGE" "$(ai_harness_usage_line claim)" ;;
 esac
 
 # Held from before --next picks until the claim file exists, so the Touches

@@ -8,7 +8,7 @@
 #
 # Runs: the trunk checkout or a claim's worktree. Writes nothing.
 
-[ $# -le 1 ] || die "$EX_USAGE" "usage: aih log [<todo-stem>]"
+[ $# -le 1 ] || die "$EX_USAGE" "$(ai_harness_usage_line log)"
 _stem=${1:-}
 _stem=${_stem#todo/}
 _stem=${_stem%.md}

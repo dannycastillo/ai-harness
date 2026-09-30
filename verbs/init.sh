@@ -40,7 +40,7 @@ while [ $# -gt 0 ]; do
 		*) _newname=$2 && shift ;;
 		esac
 		;;
-	*) die "$EX_USAGE" "usage: aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]" ;;
+	*) die "$EX_USAGE" "$(ai_harness_usage_line init)" ;;
 	esac
 	shift
 done

@@ -1,6 +1,6 @@
 # unlock — release a lock a dead process left behind
 #
-# usage: aih unlock <name> --force
+# usage: aih unlock <name> [--force]
 #
 # Prints who holds the named lock; with --force, releases it. Without --force
 # it only says who holds it and exits 2.
@@ -21,7 +21,7 @@ while [ $# -gt 0 ]; do
 	esac
 	shift
 done
-[ -n "$_name" ] || die "$EX_USAGE" "usage: aih unlock <name> --force"
+[ -n "$_name" ] || die "$EX_USAGE" "$(ai_harness_usage_line unlock)"
 
 ai_harness_lock_held "$_name" || die "$EX_FAIL" "unlock: '$_name' is not held"
 log "lock '$_name' $(ai_harness_lock_who "$_name")"

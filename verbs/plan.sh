@@ -16,7 +16,7 @@
 
 _stems=
 for _a in "$@"; do
-	case $_a in -*) die "$EX_USAGE" "usage: aih plan [<todo-stem>...]" ;; esac
+	case $_a in -*) die "$EX_USAGE" "$(ai_harness_usage_line plan)" ;; esac
 	_s=${_a#todo/}
 	_s=${_s%.md}
 	[ -f "$(ai_harness_todo_file "$_s")" ] || die "$EX_USAGE" "plan: no such todo: $_s"

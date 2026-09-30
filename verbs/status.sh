@@ -7,6 +7,6 @@
 #
 # Runs: the trunk checkout or a claim's worktree.
 
-[ $# -eq 0 ] || die "$EX_USAGE" "usage: aih status"
+[ $# -eq 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line status)"
 
 ai_harness_render_status
