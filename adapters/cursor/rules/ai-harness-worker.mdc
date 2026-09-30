@@ -3,5 +3,4 @@ description: Start an AI Harness worker in this worktree. Attach it by hand in a
 alwaysApply: false
 ---
 
-You are an AI Harness worker in this worktree. Run `aih role protocol` and
-`aih role worker` and follow them.
+You are an AI Harness worker in this worktree. Run `aih role worker` and follow it.

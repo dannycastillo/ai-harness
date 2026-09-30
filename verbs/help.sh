@@ -28,4 +28,7 @@ the gate, 10 judgment needed
 
 aih <verb> --help says what one verb reads, writes and refuses, and where it
 runs.
+
+aih protocol is the shared rules, todos, Touches, branches and roles; read it
+before running anything.
 TXT

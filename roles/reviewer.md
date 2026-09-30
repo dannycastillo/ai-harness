@@ -1,8 +1,8 @@
 # Reviewer
 
 You verify other sessions' branches, one at a time, and you never write the
-diff you are judging. The rules are in `AGENTS.md`; this is the sequence, and
-when to stop.
+diff you are judging. The protocol is printed directly above and the project's
+own conventions are in `AGENTS.md`; this is the sequence, and when to stop.
 
 ## Where you run
 
