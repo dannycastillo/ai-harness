@@ -183,6 +183,30 @@ push_no_remote() {
 	[ "$(git -C "$P/../proj-worktrees/t" log -1 --format=%s)" = 'chore: open trunk t' ] || { echo "not committed" && return 1; }
 }
 
+# a real dispatch from the trunk checkout starts the reviewer there
+dispatch_reviewer() {
+	P=$S/g/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	mkdir -p "$P/.git/ai-harness/integrate" &&
+		printf 'phase=judge\nstem=feat-t\n' >"$P/.git/ai-harness/integrate/pending" || return 1
+	_out=$(cd "$P" && "$AIH" dispatch reviewer --print 2>&1) || { printf 'dispatch --print failed:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"AI Harness reviewer"*) ;;
+	*) printf 'no boot prompt, got:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	printf '#!/bin/sh\npwd -P >"%s/stub.out"\n' "$S/g" >"$S/g/stub" && chmod +x "$S/g/stub" || return 1
+	_out=$(cd "$P" && AI_HARNESS_AGENT_CMD="$S/g/stub" "$AIH" dispatch reviewer --detach 2>&1) ||
+		{ printf 'dispatch --detach failed:\n  %s\n' "$_out" && return 1; }
+	_i=0
+	while [ ! -s "$S/g/stub.out" ] && [ "$_i" -lt 50 ]; do
+		sleep 0.1
+		_i=$((_i + 1))
+	done
+	[ "$(cat "$S/g/stub.out" 2>/dev/null)" = "$P" ] || { echo "stub did not run in $P: $(cat "$S/g/stub.out" 2>&1)" && return 1; }
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -200,4 +224,5 @@ run next_trunk
 run stale_conf
 run push_new_trunk
 run push_no_remote
+run dispatch_reviewer
 exit "$_fail"
