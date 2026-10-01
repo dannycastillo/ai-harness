@@ -1,8 +1,8 @@
 #!/bin/sh
 # first-run — what a first-time user sees: aih init's two trunks, and where aih
 # will and will not run afterwards (README, Quickstart). Prints one line per
-# scenario; exit 1 if any failed. A test, not a gate: it builds scratch repos
-# and clones this checkout.
+# scenario; exit 1 if any failed. Builds scratch repos and clones this checkout;
+# the firstrun gate runs it under gate --full.
 
 set -u
 
@@ -10,9 +10,10 @@ HOME_DIR=$(CDPATH='' cd -- "$(dirname -- "$0")/.." && pwd -P)
 AIH=${AI_HARNESS_HOME:-$HOME_DIR}/bin/aih
 S=$(CDPATH='' cd -- "$(mktemp -d)" && pwd -P)
 trap 'rm -rf "$S"' EXIT
+trap 'exit 130' INT TERM
 export GIT_AUTHOR_NAME=t GIT_AUTHOR_EMAIL=t@t GIT_COMMITTER_NAME=t GIT_COMMITTER_EMAIL=t@t
 DATE=$(date -u +%Y%m%d)
-TRUNK=ai-harness-$DATE
+TRUNK=aih-$DATE
 
 scratch() { # <dir>
 	mkdir -p "$1" && git -C "$1" init -q -b main && echo x >"$1/f" &&
@@ -188,6 +189,8 @@ dispatch_reviewer() {
 	P=$S/g/proj
 	scratch "$P" || return 1
 	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	printf '#!/bin/sh\npwd -P >"%s/stub.out"\n' "$S/g" >"$S/g/stub" && chmod +x "$S/g/stub" || return 1
+	sed -i.bak "s|^AI_HARNESS_AGENT_CMD=.*|AI_HARNESS_AGENT_CMD=\"$S/g/stub\"|" "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
 	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
 	mkdir -p "$P/.git/ai-harness/integrate" &&
 		printf 'phase=judge\nstem=feat-t\n' >"$P/.git/ai-harness/integrate/pending" || return 1
@@ -196,8 +199,7 @@ dispatch_reviewer() {
 	*"AI Harness reviewer"*) ;;
 	*) printf 'no boot prompt, got:\n  %s\n' "$_out" && return 1 ;;
 	esac
-	printf '#!/bin/sh\npwd -P >"%s/stub.out"\n' "$S/g" >"$S/g/stub" && chmod +x "$S/g/stub" || return 1
-	_out=$(cd "$P" && AI_HARNESS_AGENT_CMD="$S/g/stub" "$AIH" dispatch reviewer --detach 2>&1) ||
+	_out=$(cd "$P" && "$AIH" dispatch reviewer --detach 2>&1) ||
 		{ printf 'dispatch --detach failed:\n  %s\n' "$_out" && return 1; }
 	_i=0
 	while [ ! -s "$S/g/stub.out" ] && [ "$_i" -lt 50 ]; do

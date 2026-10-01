@@ -98,8 +98,10 @@ one exception is `aih integrate` pushing the trunk after a green merge when
 
 ## ai-harness
 
-A worker that changes a verb runs `./bin/aih` to see it working; the
-reviewer's `integrate` runs the installed copy.
+A worker that changes a verb runs `./bin/aih` to see it working. In this repo
+the loop is started from the trunk worktree as `./bin/aih run`, so its workers
+and reviewers run the trunk tree too, and a merge changes what the next tick
+runs. The installed copy is what other repos get.
 
 ## Architecture decisions
 
@@ -210,3 +212,20 @@ and where this repo already expects it in full.
 
 This governs source files only. Explanations in review and in chat are a
 different thing and stay as long as they need to be.
+
+## Conventions for the harness's own code
+
+- **POSIX sh only.** macOS ships bash 3.2.57, so no arrays and no `mapfile`,
+  and a lifted copy may run under dash.
+- **No shell file over `AI_HARNESS_SHELL_MAX_LINES` (400).** The `shellsize` gate
+  enforces it. A total line budget was tried and dropped: it says nothing about
+  whether any one file fits in your head, and it turns every addition into a
+  negotiation.
+- **`shellcheck -s sh` clean.** The `shellcheck` gate enforces it. Each
+  suppression carries its reason inline.
+- **Libraries only define functions.** `bin/aih` sources `lib/*.sh` in glob
+  order, so anything that runs at source time runs in that order too.
+- **No verb registry.** A verb is a file in `verbs/`, and `help` globs
+  the directory. Adding a verb edits nothing, so two branches adding verbs do
+  not conflict. Line 1 of a verb file is `# <verb> — <description>`, which is
+  what `help` prints.
