@@ -60,13 +60,15 @@ if [ -d "$_wt" ]; then
 fi
 git worktree prune
 
-if [ "$_keep" = no ]; then
-	if ! git branch -d "$_branch" >/dev/null 2>&1; then
+if [ "$_keep" = no ] && git show-ref -q --verify "refs/heads/$_branch"; then
+	if ! _err=$(git branch -d "$_branch" 2>&1); then
 		if [ "$_force" = yes ]; then
-			git branch -D "$_branch" >/dev/null 2>&1 ||
-				warn "abandon: could not delete $_branch"
+			_err=$(git branch -D "$_branch" 2>&1) ||
+				warn "abandon: could not delete $_branch — $_err"
+		elif case $_err in *"not fully merged"*) true ;; *) false ;; esac; then
+			warn "abandon: $_branch kept — $_err. --force deletes it"
 		else
-			warn "abandon: $_branch holds unmerged commits — kept. --force deletes it"
+			warn "abandon: $_branch kept — $_err"
 		fi
 	fi
 fi
