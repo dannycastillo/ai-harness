@@ -98,8 +98,10 @@ one exception is `aih integrate` pushing the trunk after a green merge when
 
 ## ai-harness
 
-A worker that changes a verb runs `./bin/aih` to see it working; the
-reviewer's `integrate` runs the installed copy.
+A worker that changes a verb runs `./bin/aih` to see it working. In this repo
+the loop is started from the trunk worktree as `./bin/aih run`, so its workers
+and reviewers run the trunk tree too, and a merge changes what the next tick
+runs. The installed copy is what other repos get.
 
 ## Architecture decisions
 
