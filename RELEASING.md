@@ -22,6 +22,19 @@ gh repo create dannycastillo/homebrew-tap --public --source . --push
 `dannycastillo/ai-harness` is public: the formula downloads from its Releases,
 and `brew audit` reports the homepage as a 404 until then.
 
+## Set up once
+
+The `tap` job pushes to `dannycastillo/homebrew-tap` with `TAP_TOKEN`: a
+fine-grained personal access token scoped to `homebrew-tap` only, Contents read
+and write.
+
+```sh
+gh secret set TAP_TOKEN -R dannycastillo/ai-harness
+```
+
+When the token expires the `tap` job fails at checkout. Replace the secret and
+rerun the job.
+
 ## 1. Bump VERSION
 
 Through the harness, like any other change: a `chore` todo, a branch, a
@@ -34,7 +47,12 @@ printf '%s\n' 'X.Y.Z' > VERSION
 Commit as `chore: bump VERSION to X.Y.Z`, then `aih submit` and let
 `aih integrate` land it on trunk.
 
-## 2. Tag the promoted commit
+## 2. Promote the trunk
+
+Open the trunk's pull request to `main` once the bump has merged on the trunk,
+so the PR carries the version. Merge it after CI is green.
+
+## 3. Tag the promoted commit
 
 Only once that commit is on the promoted `main` — never a worktree branch,
 and never before the merge lands.
@@ -46,16 +64,26 @@ git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-## 3. CI publishes the release
+## 4. CI publishes the release and updates the tap
 
-Pushing the tag in step 2 runs `.github/workflows/release.yml`. It fails if
-`VERSION` disagrees with the tag, then attaches `ai-harness-X.Y.Z.tar.gz` and
-`ai-harness-X.Y.Z.tar.gz.sha256` to a new release. The tarball omits the paths
-marked `export-ignore` in `.gitattributes`: only what the installed tree runs.
+Pushing the tag in step 3 runs `.github/workflows/release.yml`, two jobs:
 
-## 4. Update the tap
+- `release` fails if `VERSION` disagrees with the tag, then attaches
+  `ai-harness-X.Y.Z.tar.gz` and `ai-harness-X.Y.Z.tar.gz.sha256` to a new
+  release. The tarball omits the paths marked `export-ignore` in
+  `.gitattributes`: only what the installed tree runs.
+- `tap` runs after `release` and commits `ai-harness X.Y.Z` to
+  `dannycastillo/homebrew-tap`, setting the formula's `url` and `sha256` to this
+  tag's tarball. The tap's own test-bot then installs it.
 
-`packaging/ai-harness.rb` in this repo is the formula, kept for review; a
-release copies it into `dannycastillo/homebrew-tap` as `Formula/ai-harness.rb`,
-with its `url` and `sha256` set to this tag's tarball and the contents of the
-release's `.sha256` asset. Commit and push there — that repo has no `aih` of its own.
+The workflow is safe to rerun if GitHub fails midway: `release` uploads over an
+existing release, and `tap` does nothing when the formula already names the
+version.
+
+## 5. Verify
+
+```sh
+brew update && brew upgrade ai-harness && aih version
+```
+
+It prints `X.Y.Z`. The release is done when it does.
