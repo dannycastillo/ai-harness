@@ -222,6 +222,28 @@ dispatch_reviewer() {
 	[ "$(cat "$S/g/stub.out" 2>/dev/null)" = "$P" ] || { echo "stub did not run in $P: $(cat "$S/g/stub.out" 2>&1)" && return 1; }
 }
 
+# a bare run with nothing remembered takes every todo and records the set
+bare_run() {
+	P=$S/h/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	printf '#!/bin/sh\nexit 0\n' >"$S/h/stub" && chmod +x "$S/h/stub" || return 1
+	sed -i.bak "s|^AI_HARNESS_AGENT_CMD=.*|AI_HARNESS_AGENT_CMD=\"$S/h/stub\"|" "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
+	mkdir -p "$P/todo"
+	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$P/todo/feat-t.md"
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
+	(cd "$P" && "$AIH" run --once) >/dev/null 2>&1
+	_d=$P/.git/ai-harness/run
+	[ "$(cat "$_d/set" 2>/dev/null)" = feat-t ] || { echo "run/set is not feat-t: $(cat "$_d/set" 2>&1)" && return 1; }
+	[ -f "$_d/all" ] || { echo "run/all not written" && return 1; }
+	_out=$(cd "$P" && "$AIH" status 2>&1)
+	case $_out in
+	*"no run yet"*) printf 'status says no run yet:\n  %s\n' "$_out" && return 1 ;;
+	*feat-t*) ;;
+	*) printf 'status has no row for feat-t:\n  %s\n' "$_out" && return 1 ;;
+	esac
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -240,4 +262,5 @@ run stale_conf
 run push_new_trunk
 run push_no_remote
 run dispatch_reviewer
+run bare_run
 exit "$_fail"
