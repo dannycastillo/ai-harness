@@ -11,10 +11,14 @@ permissions:
 jobs:
   release:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.publish.outputs.version }}
+      sha256: ${{ steps.publish.outputs.sha256 }}
     steps:
       - uses: actions/checkout@v7
 
       - name: Build and publish
+        id: publish
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -27,5 +31,42 @@ jobs:
           git archive --format=tar.gz --prefix="ai-harness-$version/" \
             "$GITHUB_REF_NAME" -o "$tarball"
           sha256sum "$tarball" | awk '{print $1}' > "$tarball.sha256"
-          gh release create "$GITHUB_REF_NAME" "$tarball" "$tarball.sha256" \
-            --title "$GITHUB_REF_NAME" --generate-notes
+          if gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1; then
+            gh release upload "$GITHUB_REF_NAME" "$tarball" "$tarball.sha256" \
+              --clobber
+          else
+            gh release create "$GITHUB_REF_NAME" "$tarball" "$tarball.sha256" \
+              --title "$GITHUB_REF_NAME" --generate-notes
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha256=$(cat "$tarball.sha256")" >> "$GITHUB_OUTPUT"
+
+  tap:
+    needs: release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          repository: dannycastillo/homebrew-tap
+          token: ${{ secrets.TAP_TOKEN }}
+
+      - name: Bump the formula
+        env:
+          VERSION_OUT: ${{ needs.release.outputs.version }}
+          SHA_OUT: ${{ needs.release.outputs.sha256 }}
+        run: |
+          set -eu
+          v=${VERSION_OUT:?}
+          sha=${SHA_OUT:?}
+          f=Formula/ai-harness.rb
+          if grep -q "ai-harness-$v.tar.gz" "$f"; then
+            echo "$f already names $v"
+            exit 0
+          fi
+          sed -i \
+            -e "s|releases/download/v[^/]*/ai-harness-[^\"]*|releases/download/v$v/ai-harness-$v.tar.gz|" \
+            -e "s|^  sha256 \".*\"|  sha256 \"$sha\"|" "$f"
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+          git commit -am "ai-harness $v"
+          git push
