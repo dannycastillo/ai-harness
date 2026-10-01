@@ -5,9 +5,10 @@
 # A shell loop, not an agent. Each tick it reaps exited agents, kills any past
 # AI_HARNESS_AGENT_TIMEOUT, dispatches workers up to AI_HARNESS_MAX_WORKERS
 # from aih plan, and moves the queue a step: integrate --next, then a reviewer.
-# Stems given are remembered; a bare run reuses the last set, and --all takes
-# the todos in todo/ now: work filed later waits for the next run. aih plan
-# <stem>... previews the same set. --detach starts the loop under nohup and
+# Stems given are remembered; a bare run reuses the last set, or takes every
+# todo when none is remembered, as --all does. --all takes the todos in todo/
+# now: work filed later waits for the next run. aih plan <stem>... previews
+# the same set. --detach starts the loop under nohup and
 # prints its pid. --once runs a single tick. Needs AI_HARNESS_AGENT_CMD.
 #
 # Runs: the trunk checkout only. Exit 0 every todo merged or held with a
@@ -37,6 +38,8 @@ done
 ai_harness_require_trunk_checkout "run"
 [ -n "${AI_HARNESS_AGENT_CMD:-}" ] || die "$EX_USAGE" "run: AI_HARNESS_AGENT_CMD is unset in .ai-harness.conf"
 ! ai_harness_lock_held run || die "$EX_FAIL" "run: a loop is already running — $(ai_harness_lock_who run)"
+
+[ "$_all" = yes ] || [ -n "$_stems" ] || [ -f "$(ai_harness_run_file set)" ] || _all=yes
 
 mkdir -p "$(dirname -- "$(ai_harness_run_file set)")"
 if [ "$_all" = yes ]; then
