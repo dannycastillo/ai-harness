@@ -33,7 +33,7 @@ The first step is to configure the `trunk`: the branch and worktree where the ag
 Once you have your trunk branch and worktree, `cd` into it and run `aih doctor` to check it was set up correctly.
 
 ai-harness uses Claude Sonnet as its default agent out of the box. To change the agent, update
-`AI_HARNESS_AGENT_CMD` in the `.ai-harness.conf` file.
+`AI_HARNESS_AGENT_CMD` in the `.ai-harness.conf` file; unset, `aih dispatch` prints the command for you to run yourself.
 
 `aih` is documented to work well with interactive agent sessions, so you can also ask your agent "Init a new aih trunk for me called my-first-aih-test" and it should be able to get you going.
 

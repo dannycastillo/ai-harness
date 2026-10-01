@@ -3,13 +3,15 @@
 # usage: aih init [--yes] [--force] [--trunk <name>] [--new-trunk [<name>]]
 #
 # Detects the stack (go.mod, package.json, Cargo.toml, pyproject.toml,
-# Makefile, in that order), prints the .ai-harness.conf it would write, and
-# stops for a y unless given --yes or run from a terminal. Writes the config,
-# todo/README.md, and the adapters whose dot directory already exists.
-# Never copies the tree or edits AGENTS.md. The trunk is either a new branch in its own worktree, ai-harness-YYYYMMDD,
-# where init commits what it wrote (the default), or the branch checked out
-# here (--trunk), where it commits nothing and refuses to overwrite an
-# existing .ai-harness.conf without --force.
+# Makefile, in that order). From a terminal it asks where the trunk goes
+# (a new aih-YYYYMMDD branch and worktree, the branch checked out here, or a
+# name you type), then whether to push the trunk after each merge; that
+# answer is the confirmation. --yes asks nothing and infers the push answer
+# from whether the trunk tracks an upstream. Writes the config, todo/README.md,
+# and the adapters whose dot directory already exists, and never prints the
+# config. Never copies the tree or edits AGENTS.md.
+# A new trunk is committed by init in its own worktree; --trunk commits
+# nothing and refuses to overwrite an existing .ai-harness.conf without --force.
 #
 # Runs: in any git repository, with or without a config.
 
@@ -54,15 +56,22 @@ if [ -z "$_mode" ]; then
 	else
 		[ -t 0 ] || die "$EX_USAGE" "init: refusing to write unconfirmed — pass --yes, or run from a terminal"
 		printf 'Trunk: where ai-harness merges finished work\n'
-		printf '  1) new branch and worktree %s  (recommended)\n' "ai-harness-$(date -u +%Y%m%d)"
+		printf '  1) new branch and worktree %s  (recommended)\n' "aih-$(date -u +%Y%m%d)"
 		[ -z "$_here" ] || printf '  2) the branch checked out here (%s)\n' "$_here"
-		printf 'Choice [1]: '
+		printf '  3) a name you type\n'
+		printf 'Choice: '
 		read -r _ans
 		case $_ans in
 		1 | '') _mode=new ;;
 		2) [ -n "$_here" ] || die "$EX_USAGE" "init: HEAD is detached — pass --trunk <name>"
 			_mode=here ;;
-		*) die "$EX_USAGE" "init: choose 1 or 2" ;;
+		3)
+			printf 'Trunk name: '
+			read -r _newname
+			[ -n "$_newname" ] || die "$EX_USAGE" "init: no name given"
+			_mode=new
+			;;
+		*) die "$EX_USAGE" "init: choose 1, 2 or 3" ;;
 		esac
 		printf '\n'
 	fi
@@ -72,7 +81,7 @@ _src_conf="$AI_HARNESS_REPO/.ai-harness.conf"
 _dest=$AI_HARNESS_REPO
 _copy=no
 if [ "$_mode" = new ]; then
-	[ -n "$_newname" ] || _newname="ai-harness-$(date -u +%Y%m%d)"
+	[ -n "$_newname" ] || _newname="aih-$(date -u +%Y%m%d)"
 	git check-ref-format --branch "$_newname" >/dev/null 2>&1 ||
 		die "$EX_USAGE" "init: not a branch name: $_newname"
 	! git show-ref -q --verify "refs/heads/$_newname" ||
@@ -100,7 +109,7 @@ _gates_file="$_tmp_dir/init.gates.$$"
 _gateblock="$_tmp_dir/init.gateblock.$$"
 _conf_out="$_tmp_dir/init.conf.$$"
 : >"$_gates_file"
-trap 'rm -f "$_gates_file" "$_gateblock" "$_conf_out"' EXIT
+trap 'rm -f "$_gates_file" "$_gateblock" "$_conf_out" "$_conf_out.new"' EXIT
 
 # ---------------------------------------------------------------- detection
 #
@@ -249,18 +258,22 @@ else
 			{ print }' >"$_conf_out"
 fi
 
-printf -- '--- .ai-harness.conf (detected from %s) ---\n' "$_detected"
-cat "$_conf_out"
-printf -- '--- end ---\n\n'
-
 if [ "$_yes" = no ]; then
 	[ -t 0 ] || die "$EX_USAGE" "init: refusing to write unconfirmed — pass --yes, or run from a terminal"
-	printf 'Write this config to %s? [y/N] ' "$_conf"
-	read -r _ans
-	case $_ans in
-	y | Y | yes | YES) ;;
-	*) die "$EX_FAIL" "init: aborted; nothing written" ;;
-	esac
+	_def=n
+	[ "$_push_trunk" != yes ] || _def=y
+	while :; do
+		printf 'Push the trunk to its remote after each merge? [y/n] (%s) ' "$_def"
+		read -r _ans
+		case ${_ans:-$_def} in
+		y | Y | yes | YES) _push_trunk=yes ;;
+		n | N | no | NO) _push_trunk=no ;;
+		*) continue ;;
+		esac
+		break
+	done
+	sed "s|^AI_HARNESS_PUSH_TRUNK=.*|AI_HARNESS_PUSH_TRUNK=\"$_push_trunk\"|" "$_conf_out" >"$_conf_out.new" &&
+		mv "$_conf_out.new" "$_conf_out"
 fi
 
 if [ "$_mode" = new ]; then
@@ -268,12 +281,10 @@ if [ "$_mode" = new ]; then
 fi
 
 cp "$_conf_out" "$_conf"
-printf 'init: config written to %s\n' "$_conf"
 
 mkdir -p "$_dest/todo/new"
 cp "$AI_HARNESS_HOME/templates/todo-README.md" "$_dest/todo/README.md"
 : >"$_dest/todo/new/.keep"
-printf 'init: todo/README.md and todo/new/.keep written\n'
 
 # --------------------------------------------------------------- adapters
 #
@@ -286,7 +297,6 @@ sed -n 's/^| `\([^`]*\)` *| `\([^`]*\)\/` .*/\1 \2/p' "$AI_HARNESS_HOME/adapters
 		[ -d "$AI_HARNESS_HOME/adapters/$_platform" ] || continue
 		if [ -d "$_dest/$_dir" ]; then
 			cp -R "$AI_HARNESS_HOME/adapters/$_platform/." "$_dest/$_dir/"
-			printf 'init: adapter %s copied into %s/\n' "$_platform" "$_dir"
 		fi
 	done
 
@@ -295,7 +305,6 @@ if [ "$_mode" = new ]; then
 	_subject='chore: add ai-harness'
 	[ "$_copy" = no ] || _subject="chore: open trunk $_trunk"
 	git -C "$_dest" commit -q -m "$_subject"
-	printf 'init: committed on %s as "%s"\n' "$_trunk" "$_subject"
 	if [ "$(sed -n 's/^AI_HARNESS_PUSH_TRUNK="\(.*\)"$/\1/p' "$_conf" | head -1)" = yes ]; then
 		_remote=$(git config "branch.${_here:-main}.remote" 2>/dev/null || git config branch.main.remote 2>/dev/null) || _remote=
 		[ -n "$_remote" ] || ! git remote | grep -qx origin || _remote=origin
@@ -307,7 +316,10 @@ if [ "$_mode" = new ]; then
 			warn "init: push of $_trunk to $_remote was rejected — it stays local; push it once with -u"
 		fi
 	fi
-	printf 'init: done — trunk %s is at %s\n\n  cd %s\n  aih doctor\n' "$_trunk" "$_dest" "$_dest"
+	printf 'init: .ai-harness.conf written and committed on %s\n' "$_trunk"
 else
-	printf 'init: done — commit these on %s, then aih doctor\n' "$_trunk"
+	printf 'init: .ai-harness.conf written on %s; commit it\n' "$_trunk"
 fi
+printf "init: agents run as Claude's sonnet model by default\n"
+printf 'init: change AI_HARNESS_AGENT_CMD in .ai-harness.conf to use another agent or model\n'
+[ "$_mode" != new ] || printf '\n  cd %s\n' "$_dest"

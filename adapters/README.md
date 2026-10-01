@@ -40,8 +40,9 @@ check.
 
 ## When none is needed
 
-A platform that reads `AGENTS.md` on its own needs no adapter: paste the boot
-prompt `dispatch` prints with `AI_HARNESS_AGENT_CMD` unset. It is one line by
+A platform that reads `AGENTS.md` on its own needs no adapter: unset
+`AI_HARNESS_AGENT_CMD` in `.ai-harness.conf` and paste the boot prompt
+`dispatch` prints. It is one line by
 design, so a platform nobody has written an adapter for is a supported path,
 not a degraded one.
 
