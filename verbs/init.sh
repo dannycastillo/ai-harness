@@ -222,8 +222,8 @@ fi
 if [ -z "$_detected" ]; then
 	_detected="no recognised stack"
 	cat >>"$_gates_file" <<'EOF'
-# aih init found no stack it recognises: no gate is declared, and doctor
-# reports "no gates declared" rather than failing. Declare one by hand: a
+# aih init found no stack it recognises: no gate is declared, so gate warns
+# and passes, and doctor reports "no gates declared". Declare one by hand: a
 # function named ai_harness_gate_<name> plus AI_HARNESS_GATE_TOOLS_<name>,
 # then add <name> to AI_HARNESS_GATES below. See README.md's Configuration
 # section.
