@@ -8,7 +8,9 @@
 # submit and integrate run --full.
 #
 # Runs: anywhere in a configured repository. Exit 4 when the environment
-# cannot run the gates, as distinct from a gate failing.
+# cannot run the gates, as distinct from a gate failing. An empty list is
+# neither: it warns and exits 0, since nothing was declared and nothing
+# was skipped.
 
 _list=$AI_HARNESS_GATES
 _label=full
@@ -32,7 +34,10 @@ done
 ai_harness_gate_preflight ||
 	die "$EX_CONFIG" "gate: the environment cannot run the declared gates"
 
-[ -n "$_list" ] || die "$EX_CONFIG" "gate: nothing declared for --$_label"
+if [ -z "$_list" ]; then
+	warn "gate --$_label: nothing declared — passing with no checks run"
+	exit "$EX_OK"
+fi
 
 _tmp="$(ai_harness_state_dir)/tmp"
 mkdir -p "$_tmp"

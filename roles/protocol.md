@@ -48,6 +48,9 @@ scratch worktrees there are reported and left alone.
   `AI_HARNESS_GATE_TOOLS_<name>` list of what it needs on `PATH`.
 - A declared gate whose tool is missing stops the run with exit `4`. It is
   never skipped. A project without a tool declares fewer gates.
+- An empty gate list warns and passes with exit `0`. Nothing was declared,
+  so nothing is skipped; exit `4` is only for a gate that is declared and
+  cannot run.
 - `.ai-harness.conf` is always a hard stop in `check`, so an agent cannot
   loosen the gate and merge the change. The config cannot unprotect itself.
 - `AI_HARNESS_PROTECTED` lists globs that park for a human even when a todo

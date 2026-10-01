@@ -53,6 +53,19 @@ dated_trunk() {
 	[ -z "$(git -C "$P" status --porcelain)" ] && [ ! -e "$P/.ai-harness.conf" ] || { echo "main tree touched" && return 1; }
 	runs "$W" doctor || return 1
 
+	# no recognised stack: the gate list is empty, which warns and passes;
+	# a declared gate whose tool is missing is still exit 4
+	_out=$(cd "$W" && "$AIH" gate 2>&1) || { printf 'gate failed on an empty list:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"nothing declared"*) ;;
+	*) printf 'gate did not warn on an empty list, got:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	runs "$W" gate --quick || return 1
+	printf 'AI_HARNESS_GATES="nope"\nai_harness_gate_nope() { :; }\nAI_HARNESS_GATE_TOOLS_nope="aih-no-such-tool"\n' >>"$W/.ai-harness.conf"
+	(cd "$W" && "$AIH" gate >/dev/null 2>&1)
+	[ $? -eq 4 ] || { echo "a missing tool did not exit 4" && return 1; }
+	git -C "$W" checkout -q -- .ai-harness.conf || return 1
+
 	# before the merge, main has no config
 	says "$P" "this branch (main) does not have an active aih trunk." status || return 1
 	says "$P" "cd $W && aih status" status || return 1
