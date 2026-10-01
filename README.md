@@ -108,6 +108,7 @@ AI_HARNESS_GATE_TOOLS_shellcheck="shellcheck"
 - `AI_HARNESS_QUICK_GATES` is the commit gate: a worker runs `aih gate --quick` before every commit.
 - `AI_HARNESS_GATES` is the merge gate: `aih submit` runs `aih gate --full` before handing off, and `aih integrate` runs it again on the merged result before the merge is kept. A red merge gate parks; it never merges.
 - A declared gate whose tool is missing stops with exit 4 and is never skipped. Declare fewer gates rather than one that cannot run.
+- An empty list, which is what `aih init` writes when it recognises no stack, warns and passes: nothing was declared, so nothing is being skipped.
 
 ## Protected paths and parks
 
