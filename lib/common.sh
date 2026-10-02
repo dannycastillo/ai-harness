@@ -143,11 +143,10 @@ ai_harness_die_no_active_trunk() {
 	_dnt_all=$(ai_harness_trunk_checkouts)
 	_dnt_nl='
 '
-	_dnt_m="this branch ($_dnt_b) does not have an active aih trunk."
 	case $_dnt_all in
-	'') die "$EX_FAIL" "$_dnt_m${_dnt_nl}No active aih trunk on this machine; run aih init to create one." ;;
+	'') die "$EX_FAIL" "there are no active trunks for this project; run aih init to create one." ;;
 	*"$_dnt_nl"*)
-		_dnt_m="$_dnt_m${_dnt_nl}Active aih trunks found:"
+		_dnt_m="this branch ($_dnt_b) does not have an active aih trunk.${_dnt_nl}Active aih trunks found:"
 		while IFS='	' read -r _dnt_tb _dnt_tp; do
 			_dnt_m="$_dnt_m${_dnt_nl}  $_dnt_tb: cd $_dnt_tp && aih $_dnt_v"
 		done <<TRUNKS
@@ -157,6 +156,7 @@ TRUNKS
 		;;
 	esac
 	_dnt_tp=${_dnt_all#*	}
+	_dnt_m="this branch ($_dnt_b) does not have an active aih trunk."
 	die "$EX_FAIL" "$_dnt_m${_dnt_nl}Active aih trunk found at $_dnt_tp:${_dnt_nl}  cd $_dnt_tp && aih $_dnt_v"
 }
 

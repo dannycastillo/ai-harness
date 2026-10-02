@@ -94,11 +94,11 @@ dated_trunk() {
 	runs "$W" status || return 1
 
 	git -C "$P" worktree remove --force "$W" || return 1
-	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
-	says "$S/a/scratch" "No active aih trunk on this machine; run aih init" status || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" run --all || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" integrate --next || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" dispatch reviewer || return 1
+	says "$P" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
+	says "$S/a/scratch" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." run --all || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." integrate --next || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." dispatch reviewer || return 1
 	runs "$C" status
 }
 
@@ -111,7 +111,7 @@ stale_conf() {
 	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
 	sed -i.bak 's/^AI_HARNESS_TRUNK=.*/AI_HARNESS_TRUNK="gone"/' "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
 	git -C "$P" commit -qam 'chore: name a retired trunk' || return 1
-	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
+	says "$P" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
 
 	(cd "$P" && "$AIH" init --new-trunk t-one --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
 	W1=$S/f/proj-worktrees/t-one
