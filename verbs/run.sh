@@ -1,6 +1,6 @@
 # run — work a set of todos unattended: dispatch, judge, merge, until idle
 #
-# usage: aih run [<todo-stem>...] [--all] [--detach] [--once]
+# usage: aih run [<todo-stem>...] [--all] [--foreground] [--once]
 #
 # A shell loop, not an agent. Each tick it reaps exited agents, kills any past
 # AI_HARNESS_AGENT_TIMEOUT, dispatches workers up to AI_HARNESS_MAX_WORKERS
@@ -8,19 +8,22 @@
 # Stems given are remembered; a bare run reuses the last set, or takes every
 # todo when none is remembered, as --all does. --all takes the todos in todo/
 # now: work filed later waits for the next run. aih plan <stem>... previews
-# the same set. --detach starts the loop under nohup and
-# prints its pid. --once runs a single tick. Needs AI_HARNESS_AGENT_CMD.
+# the same set. The loop starts under nohup and run returns at once, printing
+# the set, the pid and the verbs to watch and stop it; --foreground keeps it
+# attached. --once runs a single tick, attached. --detach is accepted and
+# does nothing: it is the default now. Needs AI_HARNESS_AGENT_CMD.
 #
 # Runs: the trunk checkout only. Exit 0 every todo merged or held with a
 # reason, 1 a stop for a human, 3 paused and drained.
 
-_detach=no
+_detach=yes
 _once=no
 _all=no
 _stems=
 while [ $# -gt 0 ]; do
 	case $1 in
-	--detach) _detach=yes ;;
+	--detach) ;;
+	--foreground) _detach=no ;;
 	--once) _once=yes ;;
 	--all) _all=yes ;;
 	-*) die "$EX_USAGE" "run: unknown option: $1" ;;
@@ -54,14 +57,15 @@ elif [ -n "$_stems" ]; then
 	rm -f "$(ai_harness_run_file all)"
 fi
 
-if [ "$_detach" = yes ]; then
+if [ "$_detach" = yes ] && [ "$_once" = no ]; then
 	_log="$(ai_harness_state_dir)/log/run.log"
 	mkdir -p "$(dirname -- "$_log")"
-	_args=
-	[ "$_once" = no ] || _args=--once
-	# shellcheck disable=SC2086  # _args is a flag or empty
-	_pid=$(set -m; nohup "$AI_HARNESS_HOME/bin/aih" run $_args </dev/null >>"$_log" 2>&1 & printf '%s\n' "$!")
+	_pid=$(set -m; nohup "$AI_HARNESS_HOME/bin/aih" run --foreground </dev/null >>"$_log" 2>&1 & printf '%s\n' "$!")
+	log "run: working $(ai_harness_run_set_names)"
 	log "run: loop pid $_pid, log $_log"
+	log "  aih status   what it is doing"
+	log "  aih log      what it has done"
+	log "  aih stop     stop the loop and its agents"
 	printf '%s\n' "$_pid"
 	exit "$EX_OK"
 fi
