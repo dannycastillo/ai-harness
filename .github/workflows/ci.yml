@@ -9,21 +9,16 @@ on:
 env:
   SHELLCHECK_VERSION: v0.11.0
 
+# Linux only. macOS is what every developer runs the gate on before each
+# commit, so CI covers the platform nobody has at hand: dash and GNU tools.
 jobs:
   gate:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, macos-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
       - name: install shellcheck ${{ env.SHELLCHECK_VERSION }}
         run: |
-          case "$RUNNER_OS" in
-            Linux) f="shellcheck-$SHELLCHECK_VERSION.linux.x86_64.tar.xz" ;;
-            macOS) f="shellcheck-$SHELLCHECK_VERSION.darwin.aarch64.tar.xz" ;;
-          esac
+          f="shellcheck-$SHELLCHECK_VERSION.linux.x86_64.tar.xz"
           curl -fsSL "https://github.com/koalaman/shellcheck/releases/download/$SHELLCHECK_VERSION/$f" | tar -xJ
           mkdir -p "$HOME/.local/bin"
           mv "shellcheck-$SHELLCHECK_VERSION/shellcheck" "$HOME/.local/bin/"
