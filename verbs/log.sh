@@ -13,6 +13,7 @@ _stem=${1:-}
 _stem=${_stem#todo/}
 _stem=${_stem%.md}
 
+ai_harness_report_begin
 ai_harness_agents_reap
 _tab=$(printf '\t')
 _ev="$(ai_harness_state_dir)/events"

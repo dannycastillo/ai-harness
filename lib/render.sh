@@ -3,6 +3,14 @@
 # here and a line in aih log name the same thing the same way. Nothing here
 # decides anything; the schedule is ai_harness_plan and the loop is lib/run.sh.
 
+# A report starts and ends with one blank line. The trailing one rides an EXIT
+# trap so early exits and die paths get it too; call this once, after argument
+# checks, and never from a library the loop also runs.
+ai_harness_report_begin() {
+	printf '\n'
+	trap 'printf "\n"' EXIT
+}
+
 ai_harness_render_age() {
 	if [ "$1" -lt 60 ]; then
 		printf '%ss\n' "$1"
@@ -285,9 +293,12 @@ ai_harness_render_status() {
 			printf '%s\n' "$_st_rows" | ai_harness_render_table
 		fi
 	else
-		printf 'no run yet. aih run --all starts one; aih plan shows what it would do.\n\n'
+		printf 'no run yet. aih run --all starts one; aih plan shows what it would do.\n'
 		_st_rows=$(ai_harness_render_todo_stems | awk 'NF && !seen[$0]++' | ai_harness_render_rows "$(ai_harness_plan)")
-		[ -z "$_st_rows" ] || printf '%s\n' "$_st_rows" | ai_harness_render_table
+		if [ -n "$_st_rows" ]; then
+			printf '\n'
+			printf '%s\n' "$_st_rows" | ai_harness_render_table
+		fi
 	fi
 
 	# The run lock is the loop line's business while its holder is alive, and

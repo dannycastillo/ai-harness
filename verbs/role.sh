@@ -11,6 +11,7 @@
 
 case $1 in
 worker | reviewer)
+	ai_harness_report_begin
 	cat "$AI_HARNESS_HOME/roles/protocol.md"
 	printf '\n'
 	cat "$AI_HARNESS_HOME/roles/$1.md"

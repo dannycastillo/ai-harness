@@ -9,4 +9,5 @@
 
 [ $# -eq 0 ] || die "$EX_USAGE" "$(ai_harness_usage_line status)"
 
+ai_harness_report_begin
 ai_harness_render_status

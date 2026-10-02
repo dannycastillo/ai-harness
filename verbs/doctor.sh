@@ -33,6 +33,7 @@ if [ "$_repair" = yes ]; then
 	log 'repair: done'
 fi
 
+ai_harness_report_begin
 _fails=0
 _row() { printf '  %-13s %s\n' "$1" "$2"; }
 _bad() {
@@ -163,7 +164,6 @@ if [ "$_selftest" = yes ]; then
 	ai_harness_selftest || _fails=$((_fails + 1))
 fi
 
-printf '\n'
 if [ "$_fails" -eq 0 ]; then
 	log "doctor: ok"
 else
