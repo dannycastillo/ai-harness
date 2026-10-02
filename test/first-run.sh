@@ -33,6 +33,18 @@ says() {
 	return 1
 }
 
+lists() { # <dir> <wanted...>: status succeeds and prints each wanted line
+	_d=$1
+	shift
+	_out=$(cd "$_d" && "$AIH" status 2>&1) || { printf 'status failed in %s:\n  %s\n' "$_d" "$_out" && return 1; }
+	for _want in "$@"; do
+		case $_out in
+		*"$_want"*) ;;
+		*) printf 'from %s, wanted:\n  %s\ngot:\n  %s\n' "$_d" "$_want" "$_out" && return 1 ;;
+		esac
+	done
+}
+
 runs() { # <dir> <aih args...>
 	_d=$1
 	shift
@@ -67,11 +79,9 @@ dated_trunk() {
 	git -C "$W" checkout -q -- .ai-harness.conf || return 1
 
 	# before the merge, main has no config
-	says "$P" "this branch (main) does not have an active aih trunk." status || return 1
-	says "$P" "cd $W && aih status" status || return 1
+	lists "$P" "aih: this branch (main) does not have an active aih trunk." "ACTIVE TRUNKS" "1. $W" "no run yet" || return 1
 	git -C "$P" worktree add -q --detach "$S/a/scratch" main || return 1
-	says "$S/a/scratch" "this branch ($(git -C "$S/a/scratch" rev-parse --short HEAD)) does not have an active aih trunk." status || return 1
-	says "$S/a/scratch" "cd $W && aih status" status || return 1
+	lists "$S/a/scratch" "this branch ($(git -C "$S/a/scratch" rev-parse --short HEAD)) does not have an active aih trunk." "ACTIVE TRUNKS" "1. $W" || return 1
 
 	mkdir -p "$W/todo"
 	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$W/todo/feat-t.md"
@@ -88,8 +98,8 @@ dated_trunk() {
 	# after the merge, main holds the config and names the trunk
 	git -C "$P" merge -q --no-ff -m 'Merge trunk' "$TRUNK" || return 1
 	git -C "$S/a/scratch" checkout -q --detach main || return 1
-	says "$P" "run this from the $TRUNK checkout: cd $W" status || return 1
-	says "$S/a/scratch" "run this from the $TRUNK checkout: cd $W" status || return 1
+	lists "$P" "ACTIVE TRUNKS" "1. $W" "no run yet" || return 1
+	lists "$S/a/scratch" "ACTIVE TRUNKS" "1. $W" || return 1
 	runs "$C" status || return 1
 	runs "$W" status || return 1
 
@@ -116,20 +126,11 @@ stale_conf() {
 	(cd "$P" && "$AIH" init --new-trunk t-one --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
 	W1=$S/f/proj-worktrees/t-one
 	[ -d "$W1" ] || W1=$S/f/ai-harness-worktrees/t-one
-	_out=$(cd "$P" && "$AIH" status 2>&1)
-	[ $? -ne 0 ] || { echo "status succeeded on stale conf" && return 1; }
-	case $_out in
-	*"this branch (main) does not have an active aih trunk."*"Active aih trunk found at $W1:"*"cd $W1 && aih status"*) ;;
-	*) printf 'one trunk, got:\n  %s\n' "$_out" && return 1 ;;
-	esac
+	lists "$P" "this branch (main) does not have an active aih trunk." "1. $W1" || return 1
 
 	(cd "$P" && "$AIH" init --new-trunk t-two --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
 	W2=$(dirname -- "$W1")/t-two
-	_out=$(cd "$P" && "$AIH" status 2>&1)
-	case $_out in
-	*"Active aih trunks found:"*"t-one: cd $W1 && aih status"*"t-two: cd $W2 && aih status"*) ;;
-	*) printf 'two trunks, got:\n  %s\n' "$_out" && return 1 ;;
-	esac
+	lists "$P" "1. $W1" "2. $W2" || return 1
 }
 
 trunk_here() {
@@ -145,7 +146,7 @@ trunk_here() {
 	runs "$P" doctor || return 1
 	runs "$P" status || return 1
 	git -C "$P" worktree add -q --detach "$S/b/scratch" || return 1
-	says "$S/b/scratch" "run this from the main checkout: cd $P" status
+	lists "$S/b/scratch" "ACTIVE TRUNKS" "1. $P"
 }
 
 next_trunk() {
