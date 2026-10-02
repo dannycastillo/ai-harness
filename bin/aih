@@ -38,6 +38,7 @@ verb_file="$AI_HARNESS_HOME/verbs/$verb.sh"
 
 case ${1:-} in
 -h | --help)
+	ai_harness_report_begin
 	ai_harness_verb_help "$verb"
 	exit "$EX_OK"
 	;;
