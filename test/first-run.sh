@@ -244,6 +244,27 @@ bare_run() {
 	esac
 }
 
+# an empty repo gets one empty root commit on its branch, then the trunk
+empty_repo() {
+	P=$S/i/proj
+	W=$S/i/proj-worktrees/$TRUNK
+	mkdir -p "$P" && git -C "$P" init -q -b main || return 1
+	_out=$(cd "$P" && "$AIH" init --yes 2>&1) || { printf 'init failed:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"init: no commits yet; made an empty root commit on main"*) ;;
+	*) printf 'no notice:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	[ "$(git -C "$P" log --format=%s main)" = 'chore: init' ] || { echo "main is not one chore: init commit" && return 1; }
+	[ -z "$(git -C "$P" ls-tree -r main)" ] || { echo "main's tree is not empty" && return 1; }
+	[ -z "$(git -C "$P" status --porcelain)" ] && [ ! -e "$P/.ai-harness.conf" ] || { echo "main tree touched" && return 1; }
+	[ "$(git -C "$W" log -1 --format=%s)" = 'chore: add ai-harness' ] || { echo "wrong trunk commit" && return 1; }
+	[ -f "$W/.ai-harness.conf" ] || { echo "no config in $W" && return 1; }
+	P=$S/j/proj
+	mkdir -p "$P" && git -C "$P" init -q -b main || return 1
+	runs "$P" init --trunk main --yes || return 1
+	[ -z "$(git -C "$P" rev-list --all 2>/dev/null)" ] || { echo "--trunk committed on an empty repo" && return 1; }
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -263,4 +284,5 @@ run push_new_trunk
 run push_no_remote
 run dispatch_reviewer
 run bare_run
+run empty_repo
 exit "$_fail"
