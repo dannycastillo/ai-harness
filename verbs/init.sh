@@ -277,6 +277,10 @@ if [ "$_yes" = no ]; then
 fi
 
 if [ "$_mode" = new ]; then
+	if ! git rev-parse -q --verify HEAD >/dev/null 2>&1; then
+		git -C "$AI_HARNESS_REPO" commit -q --allow-empty -m 'chore: init'
+		printf 'init: no commits yet; made an empty root commit on %s\n' "$_here"
+	fi
 	git worktree add -q -b "$_trunk" "$_dest" HEAD
 fi
 

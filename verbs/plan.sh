@@ -23,6 +23,7 @@ for _a in "$@"; do
 	_stems="$_stems $_s"
 done
 
+ai_harness_report_begin
 ai_harness_render_init
 # shellcheck disable=SC2154  # _st_tab is set by ai_harness_render_init
 _tab=$_st_tab

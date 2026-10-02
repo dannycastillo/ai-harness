@@ -8,4 +8,5 @@
 #
 # Runs: anywhere, repository or not. Writes nothing.
 
+ai_harness_report_begin
 cat "$AI_HARNESS_HOME/roles/protocol.md"

@@ -33,6 +33,18 @@ says() {
 	return 1
 }
 
+lists() { # <dir> <wanted...>: status succeeds and prints each wanted line
+	_d=$1
+	shift
+	_out=$(cd "$_d" && "$AIH" status 2>&1) || { printf 'status failed in %s:\n  %s\n' "$_d" "$_out" && return 1; }
+	for _want in "$@"; do
+		case $_out in
+		*"$_want"*) ;;
+		*) printf 'from %s, wanted:\n  %s\ngot:\n  %s\n' "$_d" "$_want" "$_out" && return 1 ;;
+		esac
+	done
+}
+
 runs() { # <dir> <aih args...>
 	_d=$1
 	shift
@@ -67,11 +79,9 @@ dated_trunk() {
 	git -C "$W" checkout -q -- .ai-harness.conf || return 1
 
 	# before the merge, main has no config
-	says "$P" "this branch (main) does not have an active aih trunk." status || return 1
-	says "$P" "cd $W && aih status" status || return 1
+	lists "$P" "aih: this branch (main) does not have an active aih trunk." "ACTIVE TRUNKS" "1. $W" "no run yet" || return 1
 	git -C "$P" worktree add -q --detach "$S/a/scratch" main || return 1
-	says "$S/a/scratch" "this branch ($(git -C "$S/a/scratch" rev-parse --short HEAD)) does not have an active aih trunk." status || return 1
-	says "$S/a/scratch" "cd $W && aih status" status || return 1
+	lists "$S/a/scratch" "this branch ($(git -C "$S/a/scratch" rev-parse --short HEAD)) does not have an active aih trunk." "ACTIVE TRUNKS" "1. $W" || return 1
 
 	mkdir -p "$W/todo"
 	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$W/todo/feat-t.md"
@@ -88,17 +98,17 @@ dated_trunk() {
 	# after the merge, main holds the config and names the trunk
 	git -C "$P" merge -q --no-ff -m 'Merge trunk' "$TRUNK" || return 1
 	git -C "$S/a/scratch" checkout -q --detach main || return 1
-	says "$P" "run this from the $TRUNK checkout: cd $W" status || return 1
-	says "$S/a/scratch" "run this from the $TRUNK checkout: cd $W" status || return 1
+	lists "$P" "ACTIVE TRUNKS" "1. $W" "no run yet" || return 1
+	lists "$S/a/scratch" "ACTIVE TRUNKS" "1. $W" || return 1
 	runs "$C" status || return 1
 	runs "$W" status || return 1
 
 	git -C "$P" worktree remove --force "$W" || return 1
-	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
-	says "$S/a/scratch" "No active aih trunk on this machine; run aih init" status || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" run --all || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" integrate --next || return 1
-	says "$C" "No active aih trunk on this machine; run aih init" dispatch reviewer || return 1
+	says "$P" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
+	says "$S/a/scratch" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." run --all || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." integrate --next || return 1
+	says "$C" "aih: there are no active trunks for this project; run aih init to create one." dispatch reviewer || return 1
 	runs "$C" status
 }
 
@@ -111,25 +121,16 @@ stale_conf() {
 	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add ai-harness' || return 1
 	sed -i.bak 's/^AI_HARNESS_TRUNK=.*/AI_HARNESS_TRUNK="gone"/' "$P/.ai-harness.conf" && rm "$P/.ai-harness.conf.bak"
 	git -C "$P" commit -qam 'chore: name a retired trunk' || return 1
-	says "$P" "No active aih trunk on this machine; run aih init" status || return 1
+	says "$P" "aih: there are no active trunks for this project; run aih init to create one." status || return 1
 
 	(cd "$P" && "$AIH" init --new-trunk t-one --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
 	W1=$S/f/proj-worktrees/t-one
 	[ -d "$W1" ] || W1=$S/f/ai-harness-worktrees/t-one
-	_out=$(cd "$P" && "$AIH" status 2>&1)
-	[ $? -ne 0 ] || { echo "status succeeded on stale conf" && return 1; }
-	case $_out in
-	*"this branch (main) does not have an active aih trunk."*"Active aih trunk found at $W1:"*"cd $W1 && aih status"*) ;;
-	*) printf 'one trunk, got:\n  %s\n' "$_out" && return 1 ;;
-	esac
+	lists "$P" "this branch (main) does not have an active aih trunk." "1. $W1" || return 1
 
 	(cd "$P" && "$AIH" init --new-trunk t-two --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
 	W2=$(dirname -- "$W1")/t-two
-	_out=$(cd "$P" && "$AIH" status 2>&1)
-	case $_out in
-	*"Active aih trunks found:"*"t-one: cd $W1 && aih status"*"t-two: cd $W2 && aih status"*) ;;
-	*) printf 'two trunks, got:\n  %s\n' "$_out" && return 1 ;;
-	esac
+	lists "$P" "1. $W1" "2. $W2" || return 1
 }
 
 trunk_here() {
@@ -145,7 +146,7 @@ trunk_here() {
 	runs "$P" doctor || return 1
 	runs "$P" status || return 1
 	git -C "$P" worktree add -q --detach "$S/b/scratch" || return 1
-	says "$S/b/scratch" "run this from the main checkout: cd $P" status
+	lists "$S/b/scratch" "ACTIVE TRUNKS" "1. $P"
 }
 
 next_trunk() {
@@ -244,6 +245,54 @@ bare_run() {
 	esac
 }
 
+# an empty repo gets one empty root commit on its branch, then the trunk
+empty_repo() {
+	P=$S/i/proj
+	W=$S/i/proj-worktrees/$TRUNK
+	mkdir -p "$P" && git -C "$P" init -q -b main || return 1
+	_out=$(cd "$P" && "$AIH" init --yes 2>&1) || { printf 'init failed:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"init: no commits yet; made an empty root commit on main"*) ;;
+	*) printf 'no notice:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	[ "$(git -C "$P" log --format=%s main)" = 'chore: init' ] || { echo "main is not one chore: init commit" && return 1; }
+	[ -z "$(git -C "$P" ls-tree -r main)" ] || { echo "main's tree is not empty" && return 1; }
+	[ -z "$(git -C "$P" status --porcelain)" ] && [ ! -e "$P/.ai-harness.conf" ] || { echo "main tree touched" && return 1; }
+	[ "$(git -C "$W" log -1 --format=%s)" = 'chore: add ai-harness' ] || { echo "wrong trunk commit" && return 1; }
+	[ -f "$W/.ai-harness.conf" ] || { echo "no config in $W" && return 1; }
+	P=$S/j/proj
+	mkdir -p "$P" && git -C "$P" init -q -b main || return 1
+	runs "$P" init --trunk main --yes || return 1
+	[ -z "$(git -C "$P" rev-list --all 2>/dev/null)" ] || { echo "--trunk committed on an empty repo" && return 1; }
+}
+
+# a todo not committed on trunk is held by plan and status, never runnable
+uncommitted_todo() {
+	P=$S/k/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	mkdir -p "$P/todo"
+	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$P/todo/feat-t.md"
+	(cd "$P" && "$AIH" run --once) >/dev/null 2>&1
+	for _v in plan status; do
+		_out=$(cd "$P" && "$AIH" "$_v" 2>&1) || { printf 'aih %s failed:\n  %s\n' "$_v" "$_out" && return 1; }
+		case $_out in
+		*held*"not committed on main"*) ;;
+		*) printf 'aih %s did not hold it:\n  %s\n' "$_v" "$_out" && return 1 ;;
+		esac
+	done
+	_out=$(cd "$P" && "$AIH" claim --next 2>&1) && { printf 'claim --next took it:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"not on main yet"*) printf 'claim --next reached the not-on-trunk refusal:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add todo' || return 1
+	_out=$(cd "$P" && "$AIH" plan 2>&1)
+	case $_out in
+	*runnable*) ;;
+	*) printf 'committed todo is not runnable:\n  %s\n' "$_out" && return 1 ;;
+	esac
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -263,4 +312,6 @@ run push_new_trunk
 run push_no_remote
 run dispatch_reviewer
 run bare_run
+run empty_repo
+run uncommitted_todo
 exit "$_fail"
