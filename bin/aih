@@ -63,7 +63,13 @@ help | version | protocol | role) ;;
 	cd -- "$AI_HARNESS_REPO"
 
 	# init writes the config, so it is the one verb that must run without one.
-	if [ "$verb" != init ]; then
+	# status runs anywhere: outside a trunk or claim it lists the trunks.
+	_conf_needed=yes
+	case $verb in
+	init) _conf_needed=no ;;
+	status) ai_harness_here_is_trunk_or_claim || _conf_needed=no ;;
+	esac
+	if [ "$_conf_needed" = yes ]; then
 		if [ ! -f "$AI_HARNESS_REPO/.ai-harness.conf" ]; then
 			ai_harness_die_no_active_trunk
 		fi

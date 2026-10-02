@@ -134,19 +134,40 @@ ai_harness_sole_trunk_checkout() {
 	printf '%s\n' "$_stc"
 }
 
+# "this branch (<b>) does not have an active aih trunk."
+ai_harness_no_trunk_branch_line() {
+	_nbl=$(git symbolic-ref --short -q HEAD || git rev-parse --short HEAD)
+	printf 'this branch (%s) does not have an active aih trunk.\n' "$_nbl"
+}
+
+# Whether the tree we run in is a trunk checkout or a claim's worktree. Reads
+# git and the state dir, never the conf.
+ai_harness_here_is_trunk_or_claim() {
+	_hit=$(CDPATH='' cd -- "$AI_HARNESS_REPO" && pwd -P)
+	ai_harness_is_claim_worktree "$_hit" && return 0
+	_hit_all=$(ai_harness_trunk_checkouts)
+	while IFS='	' read -r _hit_b _hit_p; do
+		[ -n "$_hit_p" ] || continue
+		_hit_p=$(CDPATH='' cd -- "$_hit_p" 2>/dev/null && pwd -P) || continue
+		[ "$_hit_p" != "$_hit" ] || return 0
+	done <<TRUNKS
+$_hit_all
+TRUNKS
+	return 1
+}
+
 # Dies naming the branch we are on and every active trunk, with a command that
 # reruns the verb there. The conf a branch carries can name a trunk that is
 # gone, so this asks the worktrees, not the conf.
 ai_harness_die_no_active_trunk() {
 	_dnt_v=${1:-$verb}
-	_dnt_b=$(git symbolic-ref --short -q HEAD || git rev-parse --short HEAD)
 	_dnt_all=$(ai_harness_trunk_checkouts)
 	_dnt_nl='
 '
 	case $_dnt_all in
 	'') die "$EX_FAIL" "there are no active trunks for this project; run aih init to create one." ;;
 	*"$_dnt_nl"*)
-		_dnt_m="this branch ($_dnt_b) does not have an active aih trunk.${_dnt_nl}Active aih trunks found:"
+		_dnt_m="$(ai_harness_no_trunk_branch_line)${_dnt_nl}Active aih trunks found:"
 		while IFS='	' read -r _dnt_tb _dnt_tp; do
 			_dnt_m="$_dnt_m${_dnt_nl}  $_dnt_tb: cd $_dnt_tp && aih $_dnt_v"
 		done <<TRUNKS
@@ -156,7 +177,7 @@ TRUNKS
 		;;
 	esac
 	_dnt_tp=${_dnt_all#*	}
-	_dnt_m="this branch ($_dnt_b) does not have an active aih trunk."
+	_dnt_m=$(ai_harness_no_trunk_branch_line)
 	die "$EX_FAIL" "$_dnt_m${_dnt_nl}Active aih trunk found at $_dnt_tp:${_dnt_nl}  cd $_dnt_tp && aih $_dnt_v"
 }
 
