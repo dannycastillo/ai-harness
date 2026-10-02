@@ -266,6 +266,33 @@ empty_repo() {
 	[ -z "$(git -C "$P" rev-list --all 2>/dev/null)" ] || { echo "--trunk committed on an empty repo" && return 1; }
 }
 
+# a todo not committed on trunk is held by plan and status, never runnable
+uncommitted_todo() {
+	P=$S/k/proj
+	scratch "$P" || return 1
+	(cd "$P" && "$AIH" init --trunk main --yes) >/dev/null 2>&1 || { echo "init failed" && return 1; }
+	mkdir -p "$P/todo"
+	printf '# feat: t\n\n- **Priority:** low\n- **Touches:** NEW t/*\n- **Blocked by:** —\n\n## Goal\nA file.\n\n## Why\nTest.\n\n## Notes\nNone.\n\n## Done when\n- [ ] the file exists\n' >"$P/todo/feat-t.md"
+	(cd "$P" && "$AIH" run --once) >/dev/null 2>&1
+	for _v in plan status; do
+		_out=$(cd "$P" && "$AIH" "$_v" 2>&1) || { printf 'aih %s failed:\n  %s\n' "$_v" "$_out" && return 1; }
+		case $_out in
+		*held*"not committed on main"*) ;;
+		*) printf 'aih %s did not hold it:\n  %s\n' "$_v" "$_out" && return 1 ;;
+		esac
+	done
+	_out=$(cd "$P" && "$AIH" claim --next 2>&1) && { printf 'claim --next took it:\n  %s\n' "$_out" && return 1; }
+	case $_out in
+	*"not on main yet"*) printf 'claim --next reached the not-on-trunk refusal:\n  %s\n' "$_out" && return 1 ;;
+	esac
+	git -C "$P" add -A && git -C "$P" commit -q -m 'chore: add todo' || return 1
+	_out=$(cd "$P" && "$AIH" plan 2>&1)
+	case $_out in
+	*runnable*) ;;
+	*) printf 'committed todo is not runnable:\n  %s\n' "$_out" && return 1 ;;
+	esac
+}
+
 _fail=0
 run() {
 	if ("$1") >"$S/out.$1" 2>&1; then
@@ -286,4 +313,5 @@ run push_no_remote
 run dispatch_reviewer
 run bare_run
 run empty_repo
+run uncommitted_todo
 exit "$_fail"

@@ -114,6 +114,8 @@ ai_harness_plan() {
 				_why="invalid: $_why"
 			elif [ -n "$_bl" ]; then
 				_why="blocked by $_bl"
+			elif ! git cat-file -e "$AI_HARNESS_TRUNK:$_f" 2>/dev/null; then
+				_why="not committed on $AI_HARNESS_TRUNK"
 			elif git show-ref --verify --quiet "refs/heads/$_br"; then
 				_why="branch $_br exists unclaimed — git branch -d it to offer this again"
 			elif [ -n "$_barrier" ] && [ "$_barrier" != "$_s" ]; then
