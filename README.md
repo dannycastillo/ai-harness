@@ -89,7 +89,7 @@ Or run a specific set:
 aih run todo-file-1 todo-file-2
 ```
 
-You can then monitor the run with `aih status` or `aih log` from within your trunk directory.
+`aih run` returns at once and the loop keeps going in the background; `aih stop` ends it (`--foreground` keeps it attached). You can then monitor the run with `aih status` or `aih log` from within your trunk directory.
 
 ## Defining your own checks
 

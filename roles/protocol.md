@@ -118,8 +118,8 @@ workers up to `AI_HARNESS_MAX_WORKERS` from `plan`, and moves the queue one step
 nothing is runnable and nothing is in flight, or on a stop a human owns.
 
 ```sh
-aih run fix-a fix-b --detach           # remembers the set; a bare run reuses it
-aih run --all --detach                 # the todos in todo/ now; later ones wait for the next run
+aih run fix-a fix-b                    # remembers the set; a bare run reuses it
+aih run --all                          # the todos in todo/ now; later ones wait for the next run
 aih status                             # the run: loop, then a row per todo and why
 aih log                                # what happened
 aih pause "trunk needs a look"         # no new claims; queued work still merges
